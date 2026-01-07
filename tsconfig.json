@@ -1,0 +1,28 @@
+{
+  "compilerOptions": {
+    "target": "ESNext",
+    "module": "commonjs",
+    "moduleResolution": "node",
+    "strict": true,
+    "noImplicitAny": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "resolveJsonModule": true,
+    "declaration": true,
+    "declarationMap": true,
+    "sourceMap": true,
+    "outDir": "./dist",
+    "baseUrl": ".",
+    "paths": {
+      "@pages/*": ["src/pages/*"],
+      "@components/*": ["src/components/*"],
+      "@fixtures/*": ["src/fixtures/*"],
+      "@utils/*": ["src/utils/*"],
+      "@test-data/*": ["src/test-data/*"]
+    }
+  },
+  "include": ["tests/**/*.ts", "src/**/*.ts"],
+  "exclude": ["node_modules", "dist"]
+}
+

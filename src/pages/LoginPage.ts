@@ -1,0 +1,112 @@
+import { type Page, type Locator } from '@playwright/test';
+
+/**
+ * Page Object Model for the Login Page (/login)
+ * Handles user authentication functionality
+ */
+export class LoginPage {
+  readonly page: Page;
+  readonly usernameInput: Locator;
+  readonly passwordInput: Locator;
+  readonly signInButton: Locator;
+  readonly errorMessage: Locator;
+  readonly backToHomeLink: Locator;
+  readonly testCredentialsSection: Locator;
+  readonly standardUserCredential: Locator;
+  readonly lockedUserCredential: Locator;
+  readonly adminUserCredential: Locator;
+
+  constructor(page: Page) {
+    this.page = page;
+
+    // Form elements using user-facing locators (Priority 1)
+    this.usernameInput = page.getByLabel('Username');
+    this.passwordInput = page.getByLabel('Password');
+    this.signInButton = page.getByRole('button', { name: 'Sign In' });
+
+    // Error message
+    this.errorMessage = page.getByRole('alert');
+
+    // Navigation
+    this.backToHomeLink = page.getByRole('link', { name: 'Back to Home' });
+
+    // Test credentials section
+    this.testCredentialsSection = page.getByText('Test Credentials');
+    this.standardUserCredential = page.getByRole('button', { name: /Standard User/i });
+    this.lockedUserCredential = page.getByRole('button', { name: /Locked User/i });
+    this.adminUserCredential = page.getByRole('button', { name: /Admin User/i });
+  }
+
+  /**
+   * Navigate to the login page
+   */
+  async goto(): Promise<void> {
+    await this.page.goto('/login');
+  }
+
+  /**
+   * Fill the username field
+   */
+  async fillUsername(username: string): Promise<void> {
+    await this.usernameInput.fill(username);
+  }
+
+  /**
+   * Fill the password field
+   */
+  async fillPassword(password: string): Promise<void> {
+    await this.passwordInput.fill(password);
+  }
+
+  /**
+   * Click the Sign In button
+   */
+  async clickSignIn(): Promise<void> {
+    await this.signInButton.click();
+  }
+
+  /**
+   * Perform complete login action
+   */
+  async login(username: string, password: string): Promise<void> {
+    await this.fillUsername(username);
+    await this.fillPassword(password);
+    await this.clickSignIn();
+  }
+
+  /**
+   * Click on Standard User test credential to auto-fill form
+   */
+  async clickStandardUserCredential(): Promise<void> {
+    await this.standardUserCredential.click();
+  }
+
+  /**
+   * Click on Locked User test credential to auto-fill form
+   */
+  async clickLockedUserCredential(): Promise<void> {
+    await this.lockedUserCredential.click();
+  }
+
+  /**
+   * Click on Admin User test credential to auto-fill form
+   */
+  async clickAdminUserCredential(): Promise<void> {
+    await this.adminUserCredential.click();
+  }
+
+  /**
+   * Navigate back to home page
+   */
+  async clickBackToHome(): Promise<void> {
+    await this.backToHomeLink.click();
+  }
+
+  /**
+   * Get the error message text
+   */
+  async getErrorMessageText(): Promise<string> {
+    return await this.errorMessage.textContent() ?? '';
+  }
+}
+

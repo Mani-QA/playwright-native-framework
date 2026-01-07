@@ -1,0 +1,40 @@
+{
+  "name": "qademo-playwright-automation",
+  "version": "1.0.0",
+  "description": "Playwright automation framework for QADemo e-commerce application",
+  "main": "index.js",
+  "scripts": {
+    "test": "npx playwright test",
+    "test:ui": "npx playwright test --ui",
+    "test:headed": "npx playwright test --headed",
+    "test:debug": "npx playwright test --debug",
+    "test:auth": "npx playwright test tests/auth.spec.ts",
+    "test:catalog": "npx playwright test tests/catalog.spec.ts",
+    "test:cart": "npx playwright test tests/cart.spec.ts",
+    "test:checkout": "npx playwright test tests/checkout.spec.ts",
+    "test:orders": "npx playwright test tests/orders.spec.ts",
+    "test:admin": "npx playwright test tests/admin.spec.ts",
+    "report": "npx playwright show-report",
+    "codegen": "npx playwright codegen https://qademo.com",
+    "lint": "eslint src tests --ext .ts"
+  },
+  "keywords": [
+    "playwright",
+    "automation",
+    "testing",
+    "e-commerce",
+    "typescript"
+  ],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@playwright/test": "^1.50.0",
+    "@types/node": "^22.0.0",
+    "@typescript-eslint/eslint-plugin": "^8.0.0",
+    "@typescript-eslint/parser": "^8.0.0",
+    "eslint": "^9.0.0",
+    "eslint-plugin-playwright": "^2.0.0",
+    "typescript": "^5.7.0"
+  }
+}
+

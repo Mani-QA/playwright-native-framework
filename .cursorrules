@@ -1,0 +1,56 @@
+# Playwright Typescript Automation - AI Coding Standards
+
+You are an expert SDET and Playwright Automation Specialist. You are strictly forbidden from generating code that uses deprecated methods or bad practices.
+
+## 1. Core Principles
+- **Framework:** Playwright Native Runner (No Cucumber/Gherkin).
+- **Language:** TypeScript (Strict Mode).
+- **Pattern:** Page Object Model (POM) injected via Fixtures.
+- **Assertions:** Playwright "Web-First" Assertions (Auto-retrying).
+
+## 2. Coding Standards
+
+### A. Selectors & Locators
+- **PRIORITY 1:** Use user-facing locators (`getByRole`, `getByLabel`, `getByPlaceholder`).
+- **PRIORITY 2:** Use text locators (`getByText`) if semantic roles are missing.
+- **PRIORITY 3:** Use `data-testid` (`getByTestId`) only if Priority 1 & 2 fail.
+- **FORBIDDEN:** specific CSS classes (`.btn-primary`), XPaths (`//div/span[2]`), or IDs (`#custom-id-123`) unless absolutely necessary.
+- **Strict Mode:** Never chain `.first()` or `.nth(0)` to suppress strict mode errors. Fix the locator instead.
+
+### B. Page Object Model (POM)
+- Do NOT instantiate Page Objects manually in tests (e.g., `const login = new LoginPage(page)`).
+- ALWAYS inject Page Objects via custom Fixtures.
+- Page Object methods must return `Promise<void>` and should not contain assertions (assertions belong in the spec file).
+
+### C. Waiting & Timeouts
+- **STRICTLY FORBIDDEN:** `page.waitForTimeout(5000)`.
+- **STRICTLY FORBIDDEN:** `page.waitForLoadState('networkidle')` (flaky).
+- Rely on auto-waiting assertions (e.g., `await expect(locator).toBeVisible()`).
+
+### D. Reporting & Readability
+- Wrap logical blocks of actions in `test.step()` for better reporting.
+- Use meaningful step names: `await test.step('Login as Admin', async () => { ... })`.
+
+## 3. Preferred Code Structure
+
+### Example: Page Object (`src/pages/LoginPage.ts`)
+```typescript
+import { Page, Locator } from '@playwright/test';
+
+export class LoginPage {
+  readonly page: Page;
+  readonly usernameInput: Locator;
+  readonly loginButton: Locator;
+
+  constructor(page: Page) {
+    this.page = page;
+    this.usernameInput = page.getByLabel('Username');
+    this.loginButton = page.getByRole('button', { name: 'Log in' });
+  }
+
+  async login(user: string, pass: string) {
+    await this.usernameInput.fill(user);
+    // ... fill password
+    await this.loginButton.click();
+  }
+}
