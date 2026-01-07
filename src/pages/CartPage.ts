@@ -52,28 +52,35 @@ export class CartPage {
    * Get a cart item row by product name
    */
   getCartItem(productName: string): Locator {
-    return this.page.getByRole('listitem').filter({ hasText: productName });
+    // Cart items are in the main content area, filter by product name
+    return this.page.getByRole('main').locator('a').filter({ hasText: productName }).locator('..');
   }
 
   /**
    * Get the quantity display for a cart item
+   * Note: This is a text element, not a spinbutton
    */
   getItemQuantity(productName: string): Locator {
-    return this.getCartItem(productName).getByRole('spinbutton');
+    // Quantity is displayed between the - and + buttons
+    return this.getCartItem(productName).locator('button').first().locator('..').getByText(/^\d+$/);
   }
 
   /**
    * Get the increase quantity button for a cart item
+   * Note: This is an icon-only button (second button in quantity controls)
    */
   getIncreaseQuantityButton(productName: string): Locator {
-    return this.getCartItem(productName).getByRole('button', { name: '+' });
+    // The + button is the second button (after the - button)
+    return this.getCartItem(productName).getByRole('button').nth(1);
   }
 
   /**
    * Get the decrease quantity button for a cart item
+   * Note: This is an icon-only button (first button in quantity controls)
    */
   getDecreaseQuantityButton(productName: string): Locator {
-    return this.getCartItem(productName).getByRole('button', { name: '-' });
+    // The - button is the first button
+    return this.getCartItem(productName).getByRole('button').first();
   }
 
   /**

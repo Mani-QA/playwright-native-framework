@@ -47,10 +47,11 @@ export class CheckoutPage {
     this.continueShoppingButton = page.getByRole('link', { name: /Continue Shopping/i });
 
     // Shipping Information section
-    this.shippingSection = page.getByRole('group', { name: /Shipping Information/i });
+    this.shippingSection = page.getByRole('heading', { name: /Shipping Information/i }).locator('..');
     this.firstNameInput = page.getByLabel('First Name');
     this.lastNameInput = page.getByLabel('Last Name');
-    this.addressInput = page.getByLabel(/Shipping Address|Address/i);
+    // Address field uses placeholder text, not label
+    this.addressInput = page.getByPlaceholder('Enter your full address');
 
     // Payment Information section
     this.paymentSection = page.getByRole('group', { name: /Payment Information/i });
@@ -66,7 +67,7 @@ export class CheckoutPage {
     this.shippingAmount = page.getByText(/Shipping/i).locator('..').getByText(/Free|\$\d+\.\d{2}/i);
     this.totalAmount = page.getByText(/^Total$/i).locator('..').getByText(/\$\d+\.\d{2}/);
 
-    // Place Order button
+    // Place Order button (includes price, e.g., "Place Order - $129.99")
     this.placeOrderButton = page.getByRole('button', { name: /Place Order/i });
 
     // Validation errors

@@ -67,7 +67,7 @@ export class CatalogPage {
    * Get the Remove (X) button for a product that's in cart
    */
   getRemoveButton(productName: string): Locator {
-    return this.getProductCard(productName).getByRole('button', { name: /Remove/i });
+    return this.getProductCard(productName).getByRole('button', { name: /Remove from cart/i });
   }
 
   /**
