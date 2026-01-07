@@ -19,30 +19,31 @@ export class OrderDetailPage {
   constructor(page: Page) {
     this.page = page;
 
-    // Order confirmation
-    this.orderConfirmedHeading = page.getByRole('heading', { name: /Order Confirmed|Order Details/i });
-    this.orderIdText = page.getByText(/Order #|Order ID/i);
+    // Order confirmation - look for "Order Confirmed!" heading
+    this.orderConfirmedHeading = page.getByRole('heading', { name: /Order Confirmed/i, level: 1 });
+    // Order ID is shown as "Order #1" in a paragraph
+    this.orderIdText = page.getByText(/Order #\d+/);
 
-    // Order status
-    this.orderStatusBadge = page.getByRole('status');
+    // Order status - displayed as text like "Processing", "Pending", etc.
+    this.orderStatusBadge = page.getByText(/^(Processing|Pending|Completed|Shipped|Delivered)$/);
 
-    // Shipping information
-    this.shippingAddress = page.getByRole('region', { name: /Shipping/i });
+    // Shipping information - look for heading with Shipping
+    this.shippingAddress = page.getByRole('heading', { name: /Shipping Information/i }).locator('..');
 
-    // Payment information
-    this.paymentInfo = page.getByRole('region', { name: /Payment/i });
+    // Payment information - text showing card ending info
+    this.paymentInfo = page.getByText(/card ending/i);
 
-    // Ordered items
-    this.orderedItems = page.getByRole('list').getByRole('listitem');
+    // Ordered items - each order item has product name and price
+    this.orderedItems = page.getByRole('heading', { name: /Order Items/i }).locator('..').locator('div > div');
 
-    // Order total
-    this.orderTotal = page.getByText(/Total/i).locator('..').getByText(/\$\d+\.\d{2}/);
+    // Order total - look for Total label and get sibling value
+    this.orderTotal = page.getByText(/^Total$/).locator('..').locator('div').last();
 
-    // Navigation
-    this.backToOrdersLink = page.getByRole('link', { name: /Back to Orders|View All Orders/i });
+    // Navigation - "Continue Shopping" link on order detail page
+    this.backToOrdersLink = page.getByRole('link', { name: /Continue Shopping|Back to Orders|View All Orders/i });
 
-    // Error state
-    this.notFoundMessage = page.getByText(/404|Not Found|Order not found/i);
+    // Error state - look for "Order Not Found" heading only
+    this.notFoundMessage = page.getByRole('heading', { name: /Order Not Found/i });
   }
 
   /**

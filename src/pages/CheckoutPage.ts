@@ -75,10 +75,12 @@ export class CheckoutPage {
   }
 
   /**
-   * Navigate to the checkout page
+   * Navigate to the checkout page and wait for content to load
    */
   async goto(): Promise<void> {
     await this.page.goto('/checkout');
+    // Wait for either checkout form or redirect
+    await this.page.waitForLoadState('domcontentloaded');
   }
 
   /**

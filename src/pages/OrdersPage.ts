@@ -20,25 +20,27 @@ export class OrdersPage {
 
     // Empty state
     this.emptyOrdersMessage = page.getByText(/No orders yet/i);
-    this.startShoppingButton = page.getByRole('link', { name: /Start Shopping/i });
+    this.startShoppingButton = page.getByRole('link', { name: /Start Shopping|Continue Shopping/i });
 
-    // Orders list
-    this.ordersList = page.getByRole('list');
-    this.orderItems = page.getByRole('listitem');
+    // Orders list - each order is a link in the main content area
+    this.ordersList = page.getByRole('main');
+    this.orderItems = page.getByRole('main').locator('a[href^="/orders/"]');
   }
 
   /**
-   * Navigate to the orders page
+   * Navigate to the orders page and wait for content to load
    */
   async goto(): Promise<void> {
     await this.page.goto('/orders');
+    // Wait for either page heading or login redirect
+    await this.page.waitForLoadState('domcontentloaded');
   }
 
   /**
    * Get an order row by order ID
    */
   getOrderById(orderId: string): Locator {
-    return this.page.getByRole('listitem').filter({ hasText: orderId });
+    return this.page.locator(`a[href="/orders/${orderId}"]`);
   }
 
   /**

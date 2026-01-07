@@ -20,63 +20,77 @@ export class CartPage {
   constructor(page: Page) {
     this.page = page;
 
-    // Page heading
-    this.pageHeading = page.getByRole('heading', { name: /Cart|Shopping Cart/i, level: 1 });
+    // Page heading - can be either "Shopping Cart" (with items) or "Your cart is empty" (empty cart)
+    this.pageHeading = page.getByRole('heading', { name: /Shopping Cart|Your cart is empty/i, level: 1 });
 
-    // Empty cart state
-    this.emptyCartMessage = page.getByText(/Your cart is empty/i);
+    // Empty cart state - the "Your cart is empty" h1 heading
+    this.emptyCartMessage = page.getByRole('heading', { name: /Your cart is empty/i, level: 1 });
     this.continueShoppingButton = page.getByRole('link', { name: /Continue Shopping/i });
 
     // Cart actions
     this.clearCartButton = page.getByRole('button', { name: /Clear Cart/i });
 
-    // Cart items
-    this.cartItems = page.getByRole('listitem');
+    // Cart items - each item is a link with product info, in main content area
+    this.cartItems = page.getByRole('main').locator('a[href^="/products/"]');
 
-    // Order summary
-    this.orderSummary = page.getByRole('region', { name: /Order Summary/i });
-    this.subtotalAmount = page.getByText(/Subtotal/i).locator('..').getByText(/\$\d+\.\d{2}/);
-    this.shippingAmount = page.getByText(/Shipping/i).locator('..').getByText(/Free|\$\d+\.\d{2}/i);
-    this.totalAmount = page.getByText(/^Total$/i).locator('..').getByText(/\$\d+\.\d{2}/);
+    // Order summary - look for heading instead of region
+    this.orderSummary = page.getByRole('heading', { name: /Order Summary/i }).locator('..');
+    this.subtotalAmount = page.getByText('Subtotal').locator('..').locator('div').last();
+    this.shippingAmount = page.getByText('Shipping').locator('..').locator('div').last();
+    this.totalAmount = page.getByText('Total').locator('..').locator('div').last();
     this.proceedToCheckoutButton = page.getByRole('button', { name: /Proceed to Checkout/i });
   }
 
   /**
-   * Navigate to the cart page
+   * Navigate to the cart page and wait for content to load
    */
   async goto(): Promise<void> {
     await this.page.goto('/cart');
+    // Wait for the page heading to be visible, indicating content has loaded
+    await this.pageHeading.waitFor({ state: 'visible', timeout: 10000 });
   }
 
   /**
-   * Get a cart item row by product name
+   * Wait for cart items to be visible (useful after adding products)
+   */
+  async waitForCartItems(): Promise<void> {
+    // Wait for either empty cart message or cart items to be visible
+    await Promise.race([
+      this.emptyCartMessage.waitFor({ state: 'visible', timeout: 10000 }),
+      this.cartItems.first().waitFor({ state: 'visible', timeout: 10000 }),
+    ]);
+  }
+
+  /**
+   * Get a cart item container by product name
+   * Cart items have a link (product image/name) and buttons alongside it
    */
   getCartItem(productName: string): Locator {
-    // Cart items are in the main content area, filter by product name
-    return this.page.getByRole('main').locator('a').filter({ hasText: productName }).locator('..');
+    // Find the container that has the product link
+    return this.page.getByRole('main').locator('a').filter({ hasText: productName }).locator('xpath=../..'); 
   }
 
   /**
    * Get the quantity display for a cart item
-   * Note: This is a text element, not a spinbutton
+   * Note: This is a text element (generic div), not a spinbutton
    */
   getItemQuantity(productName: string): Locator {
-    // Quantity is displayed between the - and + buttons
-    return this.getCartItem(productName).locator('button').first().locator('..').getByText(/^\d+$/);
+    // Quantity is displayed as text between the - and + buttons
+    return this.getCartItem(productName).locator('div').filter({ hasText: /^[0-9]+$/ }).first();
   }
 
   /**
    * Get the increase quantity button for a cart item
-   * Note: This is an icon-only button (second button in quantity controls)
+   * Note: This is an icon-only button (second button after quantity display)
    */
   getIncreaseQuantityButton(productName: string): Locator {
-    // The + button is the second button (after the - button)
+    // The + button is the button after the quantity display (not disabled)
     return this.getCartItem(productName).getByRole('button').nth(1);
   }
 
   /**
    * Get the decrease quantity button for a cart item
-   * Note: This is an icon-only button (first button in quantity controls)
+   * Note: This is an icon-only button (first button before quantity display)
    */
   getDecreaseQuantityButton(productName: string): Locator {
     // The - button is the first button
@@ -85,9 +99,10 @@ export class CartPage {
 
   /**
    * Get the remove (trash) button for a cart item
+   * This is the last button in the item row
    */
   getRemoveItemButton(productName: string): Locator {
-    return this.getCartItem(productName).getByRole('button', { name: /Remove|Delete/i });
+    return this.getCartItem(productName).getByRole('button').last();
   }
 
   /**
@@ -168,7 +183,7 @@ export class CartPage {
    * Get quantity value for a specific item
    */
   async getQuantityValue(productName: string): Promise<string> {
-    return await this.getItemQuantity(productName).inputValue();
+    return await this.getItemQuantity(productName).textContent() ?? '0';
   }
 }
 

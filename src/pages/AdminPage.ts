@@ -60,19 +60,19 @@ export class AdminPage {
     this.productsTab = page.getByRole('button', { name: /Products/i });
     this.ordersTab = page.getByRole('button', { name: /Orders/i });
 
-    // Overview Statistics
-    this.productsCount = page.getByText(/Products/i).locator('..').getByRole('heading');
-    this.ordersCount = page.getByText(/Orders/i).locator('..').getByRole('heading');
-    this.usersCount = page.getByText(/Users/i).locator('..').getByRole('heading');
-    this.pendingOrdersCount = page.getByText(/Pending/i).locator('..').getByRole('heading');
+    // Overview Statistics - each stat card has a label paragraph and a value paragraph
+    this.productsCount = page.locator('p').filter({ hasText: 'Products' }).locator('..').locator('p').nth(1);
+    this.ordersCount = page.locator('p').filter({ hasText: /^Orders$/ }).locator('..').locator('p').nth(1);
+    this.usersCount = page.locator('p').filter({ hasText: 'Users' }).locator('..').locator('p').nth(1);
+    this.pendingOrdersCount = page.locator('p').filter({ hasText: 'Pending' }).locator('..').locator('p').nth(1);
 
-    // Low Stock Section
-    this.lowStockSection = page.getByRole('region', { name: /Low Stock/i });
-    this.lowStockItems = this.lowStockSection.getByRole('listitem');
+    // Low Stock Section - no explicit low stock section in current design
+    this.lowStockSection = page.getByRole('heading', { name: /Low Stock/i }).locator('..');
+    this.lowStockItems = this.lowStockSection.locator('a');
 
     // Recent Orders Section
-    this.recentOrdersSection = page.getByRole('region', { name: /Recent Orders/i });
-    this.recentOrderItems = this.recentOrdersSection.getByRole('listitem');
+    this.recentOrdersSection = page.getByRole('heading', { name: /Recent Orders/i }).locator('..');
+    this.recentOrderItems = this.recentOrdersSection.locator('div').filter({ hasText: /Order #/ });
 
     // Products Tab
     this.productsTable = page.getByRole('table');
@@ -96,10 +96,12 @@ export class AdminPage {
   }
 
   /**
-   * Navigate to the admin dashboard
+   * Navigate to the admin dashboard and wait for it to load
    */
   async goto(): Promise<void> {
     await this.page.goto('/admin');
+    // Wait for either the admin dashboard heading or an access denied redirect
+    await this.page.waitForLoadState('domcontentloaded');
   }
 
   /**
@@ -246,10 +248,12 @@ export class AdminPage {
   }
 
   /**
-   * Check if user has admin access
+   * Check if user has admin access by verifying the admin dashboard is visible
    */
   async hasAdminAccess(): Promise<boolean> {
-    return !(await this.accessDeniedMessage.isVisible());
+    // Check if the admin dashboard heading is visible
+    // If redirected to login or access denied, this will be false
+    return await this.pageHeading.isVisible({ timeout: 5000 }).catch(() => false);
   }
 
   /**

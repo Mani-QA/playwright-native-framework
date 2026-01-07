@@ -1,5 +1,5 @@
 import { test, expect } from '../src/fixtures/pomFixtures';
-import { STANDARD_USER, URLS } from '../src/test-data';
+import { STANDARD_USER } from '../src/test-data';
 
 test.describe('Navigation & Layout Module', () => {
   test.describe('FR-NAV-001: Logo Navigation', () => {
@@ -39,6 +39,7 @@ test.describe('Navigation & Layout Module', () => {
       loginPage,
       catalogPage,
       navBar,
+      page,
     }) => {
       await test.step('Navigate to login page and login', async () => {
         await loginPage.goto();
@@ -55,7 +56,7 @@ test.describe('Navigation & Layout Module', () => {
       });
 
       await test.step('Add a product to cart', async () => {
-        const firstAddButton = catalogPage.productCards.first().getByRole('button', { name: 'Add' });
+        const firstAddButton = page.getByRole('button', { name: 'Add' }).first();
         await firstAddButton.click();
       });
 
@@ -169,4 +170,3 @@ test.describe('Navigation & Layout Module', () => {
     });
   });
 });
-

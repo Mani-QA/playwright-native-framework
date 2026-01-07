@@ -21,27 +21,24 @@ export class NavBar {
   constructor(page: Page) {
     this.page = page;
 
-    // Logo and main navigation
-    this.logo = page.getByRole('link', { name: /QA Demo|Logo/i });
-    this.productsLink = page.getByRole('link', { name: 'Products' });
+    // Logo and main navigation - scoped to navigation to avoid footer
+    this.logo = page.getByRole('navigation').getByRole('link', { name: /QA Demo/i });
+    this.productsLink = page.getByRole('navigation').getByRole('link', { name: 'Products' });
 
-    // Cart
-    this.cartIcon = page.getByRole('link', { name: /Cart/i });
-    this.cartBadge = page.getByRole('link', { name: /Cart/i }).getByText(/\d+/);
+    // Cart - the cart link goes to /cart and may contain a badge number
+    this.cartIcon = page.getByRole('navigation').locator('a[href="/cart"]');
+    this.cartBadge = page.getByRole('navigation').locator('a[href="/cart"]').locator('div').last();
 
     // Authentication - Guest state (scope to navigation to avoid footer link)
     this.signInButton = page.getByRole('navigation').getByRole('link', { name: /Sign In/i });
 
     // Authentication - Logged in state
-    // Username link goes to /orders - it's in the navigation next to the logout button
-    this.usernameLink = page.getByRole('navigation').getByRole('link', { name: /orders/i }).or(
-      page.getByRole('navigation').locator('a[href="/orders"]')
-    );
+    // Username link goes to /orders - find it in the navigation
+    this.usernameLink = page.getByRole('navigation').locator('a[href="/orders"]');
     // Use exact: true to avoid matching "admin_user" username
     this.adminButton = page.getByRole('link', { name: 'Admin', exact: true });
-    // Logout button is an icon-only button next to the username in nav
-    // It's the button inside the navigation that's not Sign In
-    this.logoutButton = page.getByRole('navigation').getByRole('button').filter({ hasNotText: /Sign In/i });
+    // Logout button is an icon-only button in the navigation (the one that's not the Admin button)
+    this.logoutButton = page.getByRole('navigation').getByRole('button').last();
 
     // Mobile menu
     this.mobileMenuButton = page.getByRole('button', { name: /Menu|Toggle navigation/i });
@@ -116,12 +113,14 @@ export class NavBar {
    * Get the cart item count from badge
    */
   async getCartItemCount(): Promise<number> {
-    const isVisible = await this.cartBadge.isVisible();
-    if (!isVisible) {
-      return 0;
+    // Cart badge displays a number like "1" or "2" - look for any number in the cart link
+    const cartLink = this.cartIcon;
+    const cartText = await cartLink.textContent() ?? '';
+    const match = cartText.match(/\d+/);
+    if (match) {
+      return parseInt(match[0], 10);
     }
-    const text = await this.cartBadge.textContent() ?? '0';
-    return parseInt(text, 10);
+    return 0;
   }
 
   /**

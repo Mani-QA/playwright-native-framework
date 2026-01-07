@@ -13,26 +13,31 @@ export class CatalogPage {
   constructor(page: Page) {
     this.page = page;
 
-    // Page heading
-    this.pageHeading = page.getByRole('heading', { name: /Products/i, level: 1 });
+    // Page heading - "Product Catalog" is the actual heading text
+    this.pageHeading = page.getByRole('heading', { name: /Product Catalog/i, level: 1 });
 
-    // Product grid and cards
+    // Product grid and cards - products are links with nested content
     this.productGrid = page.getByRole('main');
-    this.productCards = page.getByRole('article');
+    // Each product card is a link element containing heading, description, price and buttons
+    this.productCards = page.getByRole('main').locator('a[href^="/products/"]');
   }
 
   /**
-   * Navigate to the catalog page
+   * Navigate to the catalog page and wait for products to load
    */
   async goto(): Promise<void> {
     await this.page.goto('/catalog');
+    // Wait for the page heading to be visible, indicating content has loaded
+    await this.pageHeading.waitFor({ state: 'visible', timeout: 10000 });
+    // Wait for at least one product card to be visible
+    await this.productCards.first().waitFor({ state: 'visible', timeout: 10000 });
   }
 
   /**
    * Get a product card by product name
    */
   getProductCard(productName: string): Locator {
-    return this.page.getByRole('article').filter({ hasText: productName });
+    return this.page.getByRole('main').locator('a[href^="/products/"]').filter({ hasText: productName });
   }
 
   /**

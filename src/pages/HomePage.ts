@@ -18,15 +18,16 @@ export class HomePage {
     this.page = page;
 
     // Hero section elements
-    this.heroSection = page.getByRole('banner');
+    this.heroSection = page.getByRole('main');
     this.welcomeMessage = page.getByRole('heading', { level: 1 });
     this.shopNowButton = page.getByRole('link', { name: /Shop Now/i });
-    this.browseProductsButton = page.getByRole('link', { name: /Browse Products/i });
-    this.logo = page.getByRole('img', { name: /QA Demo/i });
+    this.browseProductsButton = page.getByRole('link', { name: /Browse Products/i }).first();
+    this.logo = page.locator('a').filter({ hasText: 'QA Demo' }).first();
 
-    // Featured products
-    this.featuredProductsGrid = page.getByRole('region', { name: /Featured Products/i });
-    this.productCards = page.getByRole('article');
+    // Featured products - section contains heading "Featured Products"
+    this.featuredProductsGrid = page.getByRole('heading', { name: /Featured Products/i }).locator('..').locator('..');
+    // Product cards on home page are not visible - the home page only shows feature cards not product articles
+    this.productCards = page.getByRole('main').locator('a[href^="/products/"]');
   }
 
   /**

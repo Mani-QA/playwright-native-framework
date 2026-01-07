@@ -20,18 +20,18 @@ export class ProductDetailPage {
     this.page = page;
 
     // Product details
-    this.productImage = page.getByRole('img', { name: /product/i });
+    this.productImage = page.getByRole('main').getByRole('img').first();
     this.productName = page.getByRole('heading', { level: 1 });
-    this.productDescription = page.getByRole('article').locator('p');
-    this.productPrice = page.getByText(/\$\d+\.\d{2}/);
-    this.stockAvailability = page.getByText(/In Stock|Out of Stock|Low Stock/i);
+    this.productDescription = page.getByRole('main').locator('p');
+    this.productPrice = page.getByRole('main').getByText(/\$\d+\.\d{2}/).first();
+    this.stockAvailability = page.getByText(/\d+ in stock/i);
 
-    // Cart actions
-    this.addToCartButton = page.getByRole('button', { name: 'Add to Cart' });
+    // Cart actions - button name may be "Add to Cart" or "Add"
+    this.addToCartButton = page.getByRole('button', { name: /Add to Cart|^Add$/i });
     this.inCartButton = page.getByRole('button', { name: /In Cart/i });
 
-    // Navigation
-    this.backToProductsLink = page.getByRole('link', { name: /Back to Products/i });
+    // Navigation - "Back to Catalog" instead of "Back to Products"
+    this.backToProductsLink = page.getByRole('link', { name: /Back to Catalog|Back to Products/i });
 
     // Error state
     this.notFoundMessage = page.getByText(/404|Not Found/i);

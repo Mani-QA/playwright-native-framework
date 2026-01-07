@@ -69,12 +69,17 @@ export class LoginPage {
   }
 
   /**
-   * Perform complete login action
+   * Perform complete login action and wait for navigation
    */
   async login(username: string, password: string): Promise<void> {
     await this.fillUsername(username);
     await this.fillPassword(password);
     await this.clickSignIn();
+    // Wait for successful login navigation (redirect away from login page)
+    // or for an error message to appear
+    await this.page.waitForURL(url => !url.toString().includes('/login'), { timeout: 10000 }).catch(() => {
+      // If we didn't navigate, an error message should be displayed
+    });
   }
 
   /**
