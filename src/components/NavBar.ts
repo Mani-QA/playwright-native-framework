@@ -29,13 +29,19 @@ export class NavBar {
     this.cartIcon = page.getByRole('link', { name: /Cart/i });
     this.cartBadge = page.getByRole('link', { name: /Cart/i }).getByText(/\d+/);
 
-    // Authentication - Guest state
-    this.signInButton = page.getByRole('link', { name: /Sign In/i });
+    // Authentication - Guest state (scope to navigation to avoid footer link)
+    this.signInButton = page.getByRole('navigation').getByRole('link', { name: /Sign In/i });
 
     // Authentication - Logged in state
-    this.usernameLink = page.getByRole('navigation').getByRole('link').filter({ hasText: /^(?!Products|Cart|Sign In|Admin).*$/ });
-    this.adminButton = page.getByRole('link', { name: 'Admin' });
-    this.logoutButton = page.getByRole('button', { name: /Logout|Sign Out/i });
+    // Username link goes to /orders - it's in the navigation next to the logout button
+    this.usernameLink = page.getByRole('navigation').getByRole('link', { name: /orders/i }).or(
+      page.getByRole('navigation').locator('a[href="/orders"]')
+    );
+    // Use exact: true to avoid matching "admin_user" username
+    this.adminButton = page.getByRole('link', { name: 'Admin', exact: true });
+    // Logout button is an icon-only button next to the username in nav
+    // It's the button inside the navigation that's not Sign In
+    this.logoutButton = page.getByRole('navigation').getByRole('button').filter({ hasNotText: /Sign In/i });
 
     // Mobile menu
     this.mobileMenuButton = page.getByRole('button', { name: /Menu|Toggle navigation/i });

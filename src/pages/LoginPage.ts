@@ -22,10 +22,13 @@ export class LoginPage {
     // Form elements using user-facing locators (Priority 1)
     this.usernameInput = page.getByLabel('Username');
     this.passwordInput = page.getByLabel('Password');
-    this.signInButton = page.getByRole('button', { name: 'Sign In' });
+    // Scope to main content to avoid navbar's Sign In button
+    this.signInButton = page.getByRole('main').getByRole('button', { name: 'Sign In' });
 
-    // Error message
-    this.errorMessage = page.getByRole('alert');
+    // Error message - check for alert role or common error text patterns
+    this.errorMessage = page.getByRole('alert').or(
+      page.getByText(/error|invalid|locked|failed/i).first()
+    );
 
     // Navigation
     this.backToHomeLink = page.getByRole('link', { name: 'Back to Home' });

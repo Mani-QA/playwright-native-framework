@@ -18,7 +18,8 @@ setup('authenticate as standard user', async ({ page }) => {
   });
 
   await setup.step('Click Sign In button', async () => {
-    await page.getByRole('button', { name: 'Sign In' }).click();
+    // Use the form's submit button (in main content area), not the navbar button
+    await page.getByRole('main').getByRole('button', { name: 'Sign In' }).click();
   });
 
   await setup.step('Verify login success - redirected to catalog', async () => {
@@ -45,7 +46,8 @@ setup('authenticate as admin user', async ({ page }) => {
   });
 
   await setup.step('Click Sign In button', async () => {
-    await page.getByRole('button', { name: 'Sign In' }).click();
+    // Use the form's submit button (in main content area), not the navbar button
+    await page.getByRole('main').getByRole('button', { name: 'Sign In' }).click();
   });
 
   await setup.step('Verify login success - redirected to catalog', async () => {
@@ -53,7 +55,8 @@ setup('authenticate as admin user', async ({ page }) => {
   });
 
   await setup.step('Verify admin link is visible', async () => {
-    await expect(page.getByRole('link', { name: 'Admin' })).toBeVisible();
+    // Use exact: true to avoid matching "admin_user" username link
+    await expect(page.getByRole('link', { name: 'Admin', exact: true })).toBeVisible();
   });
 
   await setup.step('Save authentication state', async () => {
