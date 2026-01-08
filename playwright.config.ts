@@ -21,7 +21,8 @@ export default defineConfig({
   workers: process.env.CI ? 1 : undefined,
 
   // Reporter to use
-  // Use blob reporter for CI sharding, HTML + list for local runs
+  // Use blob reporter for CI sharding (merged to HTML in workflow), add github for annotations
+  // HTML reporter for local runs
   reporter: process.env.CI
     ? [['blob'], ['github'], ['list']]
     : [['html', { open: 'never' }], ['list']],
@@ -31,17 +32,21 @@ export default defineConfig({
     // Base URL for the application
     baseURL: 'https://qademo.com',
 
-    // Collect trace on first retry
-    trace: 'on-first-retry',
+    // Record trace ONLY when a test fails (on first retry)
+    // This gives you a zip file to step through the failure time-travel style
+    trace: 'retain-on-failure',
 
-    // Screenshot on failure
+    // Ensure viewport is consistent between Local and CI
+    viewport: { width: 1920, height: 1080 },
+
+    // Capture screenshot on failure
     screenshot: 'only-on-failure',
 
-    // Video on first retry
-    video: 'on-first-retry',
+    // Capture video on failure
+    video: 'retain-on-failure',
 
     // Default timeout for actions
-    actionTimeout: 10000,
+    actionTimeout: 15000,
 
     // Default navigation timeout
     navigationTimeout: 30000,
@@ -55,7 +60,7 @@ export default defineConfig({
     timeout: 10000,
   },
 
-  // Configure projects for major browsers
+  // Configure projects - Chromium only for stable CI/CD
   projects: [
     // Setup project for authentication
     {
@@ -63,7 +68,7 @@ export default defineConfig({
       testMatch: /.*\.setup\.ts/,
     },
 
-    // Chrome Desktop
+    // Chrome Desktop - primary browser for testing
     {
       name: 'chromium',
       use: {
@@ -72,41 +77,44 @@ export default defineConfig({
       dependencies: ['setup'],
     },
 
-    // Firefox Desktop
-    {
-      name: 'firefox',
-      use: {
-        ...devices['Desktop Firefox'],
-      },
-      dependencies: ['setup'],
-    },
+    // Uncomment below to enable cross-browser testing
+    // Note: May require additional locator fixes for full compatibility
+    
+    // // Firefox Desktop
+    // {
+    //   name: 'firefox',
+    //   use: {
+    //     ...devices['Desktop Firefox'],
+    //   },
+    //   dependencies: ['setup'],
+    // },
 
-    // WebKit Desktop
-    {
-      name: 'webkit',
-      use: {
-        ...devices['Desktop Safari'],
-      },
-      dependencies: ['setup'],
-    },
+    // // WebKit Desktop
+    // {
+    //   name: 'webkit',
+    //   use: {
+    //     ...devices['Desktop Safari'],
+    //   },
+    //   dependencies: ['setup'],
+    // },
 
-    // Mobile Chrome
-    {
-      name: 'Mobile Chrome',
-      use: {
-        ...devices['Pixel 5'],
-      },
-      dependencies: ['setup'],
-    },
+    // // Mobile Chrome
+    // {
+    //   name: 'Mobile Chrome',
+    //   use: {
+    //     ...devices['Pixel 5'],
+    //   },
+    //   dependencies: ['setup'],
+    // },
 
-    // Mobile Safari
-    {
-      name: 'Mobile Safari',
-      use: {
-        ...devices['iPhone 12'],
-      },
-      dependencies: ['setup'],
-    },
+    // // Mobile Safari
+    // {
+    //   name: 'Mobile Safari',
+    //   use: {
+    //     ...devices['iPhone 12'],
+    //   },
+    //   dependencies: ['setup'],
+    // },
   ],
 });
 

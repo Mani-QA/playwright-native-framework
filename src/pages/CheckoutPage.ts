@@ -85,10 +85,18 @@ export class CheckoutPage {
 
   /**
    * Fill shipping information
+   * Uses explicit waits to handle React re-renders that may detach elements
    */
   async fillShippingInfo(firstName: string, lastName: string, address: string): Promise<void> {
+    // Wait for each field to be stable before filling to handle React re-renders
+    await this.firstNameInput.waitFor({ state: 'visible', timeout: 10000 });
     await this.firstNameInput.fill(firstName);
+    
+    await this.lastNameInput.waitFor({ state: 'visible', timeout: 10000 });
     await this.lastNameInput.fill(lastName);
+    
+    // Address field may be detached during re-renders, wait for it specifically
+    await this.addressInput.waitFor({ state: 'visible', timeout: 10000 });
     await this.addressInput.fill(address);
   }
 

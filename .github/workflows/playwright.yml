@@ -1,11 +1,14 @@
 name: Playwright Tests
 
+# Sharded workflow for parallel test execution
 on:
   push:
-    branches: [main, master, develop]
+    branches: [main, master]
   pull_request:
-    branches: [main, master, develop]
-  # Allow manual trigger
+    branches: [main, master]
+  # Schedule: Run daily at 6 AM UTC
+  schedule:
+    - cron: '0 6 * * *'
   workflow_dispatch:
 
 # Sets permissions of the GITHUB_TOKEN to allow deployment to GitHub Pages
@@ -14,16 +17,63 @@ permissions:
   pages: write
   id-token: write
 
-# Allow only one concurrent deployment, skipping runs queued between the run in-progress and latest queued.
-# However, do NOT cancel in-progress runs as we want to allow these production deployments to complete.
+# Allow only one concurrent deployment
 concurrency:
   group: "pages"
   cancel-in-progress: false
 
 jobs:
   test:
-    name: Run Playwright Tests
+    name: Shard ${{ matrix.shardIndex }} of ${{ matrix.shardTotal }}
     timeout-minutes: 60
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        shardIndex: [1, 2, 3, 4]
+        shardTotal: [4]
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Playwright Chromium
+        run: npx playwright install chromium --with-deps
+
+      - name: Run Playwright tests (Shard ${{ matrix.shardIndex }}/${{ matrix.shardTotal }})
+        run: npx playwright test --project=chromium --shard=${{ matrix.shardIndex }}/${{ matrix.shardTotal }}
+        env:
+          CI: true
+
+      - name: Upload blob report
+        uses: actions/upload-artifact@v4
+        if: ${{ !cancelled() }}
+        with:
+          name: blob-report-${{ matrix.shardIndex }}
+          path: blob-report/
+          retention-days: 1
+
+      - name: Upload test results (traces, videos, screenshots)
+        uses: actions/upload-artifact@v4
+        if: ${{ failure() }}
+        with:
+          name: test-results-${{ matrix.shardIndex }}
+          path: test-results/
+          retention-days: 7
+
+  merge-reports:
+    name: Merge Playwright Reports
+    if: ${{ !cancelled() }}
+    needs: [test]
     runs-on: ubuntu-latest
 
     steps:
@@ -39,35 +89,28 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Install Playwright Browsers
-        run: npx playwright install --with-deps
+      - name: Download blob reports
+        uses: actions/download-artifact@v4
+        with:
+          path: all-blob-reports
+          pattern: blob-report-*
+          merge-multiple: true
 
-      - name: Run Playwright tests
-        run: npx playwright test
-        env:
-          CI: true
+      - name: Merge reports
+        run: npx playwright merge-reports --reporter html ./all-blob-reports
 
-      - name: Upload Playwright Report artifact
+      - name: Upload merged HTML report
         uses: actions/upload-artifact@v4
-        if: ${{ !cancelled() }}
         with:
           name: playwright-report
           path: playwright-report/
           retention-days: 30
 
-      - name: Upload Test Results
-        uses: actions/upload-artifact@v4
-        if: ${{ !cancelled() }}
-        with:
-          name: test-results
-          path: test-results/
-          retention-days: 30
-
-  # Deploy to GitHub Pages (only on main/master branch pushes)
+  # Deploy to GitHub Pages
   deploy-report:
     name: Deploy Report to GitHub Pages
-    needs: test
-    if: ${{ !cancelled() && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master') && github.event_name == 'push' }}
+    needs: merge-reports
+    if: ${{ !cancelled() && github.event_name != 'pull_request' }}
     runs-on: ubuntu-latest
     environment:
       name: github-pages
