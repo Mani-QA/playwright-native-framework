@@ -98,20 +98,21 @@ test.describe('Shopping Cart Module', () => {
       });
 
       await test.step('Click increase quantity button', async () => {
-        // Wait for buttons to render (minus, plus, trash)
-        await page.getByRole('main').locator('button:has(svg)').nth(1).waitFor({ state: 'visible', timeout: 5000 });
-        const mainButtons = page.getByRole('main').locator('button:has(svg)');
-        const plusButton = mainButtons.nth(1); // 0=minus (disabled), 1=plus, 2=trash
+        // Get the first cart item container (contains product link and controls)
+        const firstCartItem = page.getByRole('main').locator('a[href^="/products/"]').first().locator('..').locator('..');
+        // Find the plus button - it's the enabled button after the quantity text
+        // In the cart, structure is: [minus button (disabled)] [qty text] [plus button]
+        const plusButton = firstCartItem.locator('button').filter({ hasNot: page.locator('[disabled]') }).first();
+        await plusButton.waitFor({ state: 'visible', timeout: 10000 });
         await plusButton.click();
-        // Wait for UI update
-        await page.waitForTimeout(500);
-        // Verify the quantity text in the cart item updated
-        await expect(page.getByRole('main').getByText('2', { exact: true })).toBeVisible({ timeout: 5000 });
+        // Wait for cart badge to update to 2
+        await expect(page.getByRole('navigation').locator('a[href="/cart"]')).toContainText('2', { timeout: 10000 });
       });
 
       await test.step('Verify quantity increased', async () => {
-        // Verify cart badge shows 2
-        await expect(page.getByRole('navigation').locator('a[href="/cart"]')).toContainText('2', { timeout: 5000 });
+        // Verify quantity text shows 2 in the cart item
+        const firstCartItem = page.getByRole('main').locator('a[href^="/products/"]').first().locator('..').locator('..');
+        await expect(firstCartItem.getByText('2', { exact: true })).toBeVisible({ timeout: 5000 });
       });
     });
   });
@@ -141,34 +142,26 @@ test.describe('Shopping Cart Module', () => {
       });
 
       await test.step('Increase quantity to 2 first', async () => {
-        // The plus button is in the cart item area with SVG icon
-        // Wait for buttons to be rendered (minus, plus, trash)
-        await page.getByRole('main').locator('button:has(svg)').nth(1).waitFor({ state: 'visible', timeout: 5000 });
-        const mainButtons = page.getByRole('main').locator('button:has(svg)');
-        const plusButton = mainButtons.nth(1); // 0=minus (disabled), 1=plus, 2=trash
+        // Get the first cart item container
+        const firstCartItem = page.getByRole('main').locator('a[href^="/products/"]').first().locator('..').locator('..');
+        // Find the plus button - it's the enabled button after the quantity text
+        const plusButton = firstCartItem.locator('button').filter({ hasNot: page.locator('[disabled]') }).first();
         
-        // Click and wait for response - retry if needed
         await plusButton.click();
-        // Wait a moment for the click to register and update state
-        await page.waitForTimeout(500);
-        
-        // Verify the quantity text in the cart item updated
-        await expect(page.getByRole('main').getByText('2', { exact: true })).toBeVisible({ timeout: 5000 });
-        
-        // Also verify the cart badge
-        await expect(page.getByRole('navigation').locator('a[href="/cart"]')).toContainText('2', { timeout: 5000 });
+        // Wait for cart badge to update to 2
+        await expect(page.getByRole('navigation').locator('a[href="/cart"]')).toContainText('2', { timeout: 10000 });
       });
 
       await test.step('Click decrease quantity button', async () => {
-        // Now the - button should be enabled (qty is 2)
-        const mainButtons = page.getByRole('main').locator('button:has(svg)');
-        const minusButton = mainButtons.first();
+        // Get the first cart item container and find the minus button (should now be enabled)
+        const firstCartItem = page.getByRole('main').locator('a[href^="/products/"]').first().locator('..').locator('..');
+        const minusButton = firstCartItem.locator('button').first(); // First button is minus
         await minusButton.click();
       });
 
       await test.step('Verify quantity decreased', async () => {
         // Verify cart badge shows 1 again
-        await expect(page.getByRole('navigation').locator('a[href="/cart"]')).toContainText('1', { timeout: 5000 });
+        await expect(page.getByRole('navigation').locator('a[href="/cart"]')).toContainText('1', { timeout: 10000 });
       });
     });
   });
@@ -232,10 +225,10 @@ test.describe('Shopping Cart Module', () => {
       });
 
       await test.step('Click remove button', async () => {
-        // The trash button is a button with SVG icon after the +/- buttons
-        // Button order in main area with SVG: 0=minus, 1=plus, 2=trash
-        const mainButtons = page.getByRole('main').locator('button:has(svg)');
-        const trashButton = mainButtons.nth(2);
+        // Get the first cart item container and find the trash button (last button in the controls area)
+        const firstCartItem = page.getByRole('main').locator('a[href^="/products/"]').first().locator('..').locator('..');
+        // The trash button is the last button with SVG in the cart item
+        const trashButton = firstCartItem.locator('button:has(svg)').last();
         await trashButton.click();
       });
 

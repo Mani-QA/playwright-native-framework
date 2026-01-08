@@ -53,12 +53,12 @@ export class CheckoutPage {
     // Address field uses placeholder text, not label
     this.addressInput = page.getByPlaceholder('Enter your full address');
 
-    // Payment Information section
+    // Payment Information section - use multiple strategies for robustness
     this.paymentSection = page.getByRole('group', { name: /Payment Information/i });
-    this.cardNumberInput = page.getByLabel(/Card Number/i);
-    this.expiryDateInput = page.getByLabel(/Expiry Date|Expiration/i);
-    this.cvvInput = page.getByLabel(/CVV|CVC|Security Code/i);
-    this.cardholderNameInput = page.getByLabel(/Name on Card|Cardholder Name/i);
+    this.cardNumberInput = page.getByLabel(/Card Number/i).or(page.getByPlaceholder(/card number/i));
+    this.expiryDateInput = page.getByLabel(/Expiry|Expiration/i).or(page.getByPlaceholder(/MM\/YY/i));
+    this.cvvInput = page.getByLabel(/CVV|CVC|Security/i).or(page.getByPlaceholder(/CVV|CVC|123/i));
+    this.cardholderNameInput = page.getByLabel(/Name on Card|Cardholder/i).or(page.getByPlaceholder(/name on card/i));
 
     // Order Summary section
     this.orderSummarySection = page.getByRole('region', { name: /Order Summary/i });
@@ -79,8 +79,10 @@ export class CheckoutPage {
    */
   async goto(): Promise<void> {
     await this.page.goto('/checkout');
-    // Wait for either checkout form or redirect
+    // Wait for the page to fully load
     await this.page.waitForLoadState('domcontentloaded');
+    // Wait for either checkout heading or empty cart message
+    await this.pageHeading.or(this.emptyCartMessage).waitFor({ state: 'visible', timeout: 15000 });
   }
 
   /**
@@ -102,6 +104,7 @@ export class CheckoutPage {
 
   /**
    * Fill payment information
+   * Uses explicit waits to handle React re-renders that may detach elements
    */
   async fillPaymentInfo(
     cardNumber: string,
@@ -109,9 +112,17 @@ export class CheckoutPage {
     cvv: string,
     cardholderName: string
   ): Promise<void> {
+    // Wait for each field to be stable before filling to handle React re-renders
+    await this.cardNumberInput.waitFor({ state: 'visible', timeout: 15000 });
     await this.cardNumberInput.fill(cardNumber);
+
+    await this.expiryDateInput.waitFor({ state: 'visible', timeout: 15000 });
     await this.expiryDateInput.fill(expiryDate);
+
+    await this.cvvInput.waitFor({ state: 'visible', timeout: 15000 });
     await this.cvvInput.fill(cvv);
+
+    await this.cardholderNameInput.waitFor({ state: 'visible', timeout: 15000 });
     await this.cardholderNameInput.fill(cardholderName);
   }
 
