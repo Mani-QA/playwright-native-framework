@@ -447,6 +447,28 @@ jobs:
       - run: npx playwright test --shard=${{ matrix.shardIndex }}/${{ matrix.shardTotal }}
 ```
 
+### GitHub Pages Test Reports 📊
+
+Test reports are automatically published to GitHub Pages after every push to `main`/`master` branch.
+
+**Live Report URL:**
+```
+https://<username>.github.io/<repository-name>/
+```
+
+**Features:**
+- ✅ Interactive HTML report with pass/fail details
+- ✅ Screenshots on test failures
+- ✅ Trace viewer for debugging
+- ✅ Filtering and search capabilities
+
+**Setup Required:**
+1. Go to repository **Settings** → **Pages**
+2. Set **Source** to **GitHub Actions**
+3. Push to `main`/`master` to trigger deployment
+
+See [docs/github-pages-setup.md](docs/github-pages-setup.md) for detailed setup instructions.
+
 ### Storage State Authentication
 
 The framework uses Playwright's storage state feature to avoid logging in for every test:
