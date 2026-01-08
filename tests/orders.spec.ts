@@ -1,6 +1,20 @@
 import { test, expect } from '../src/fixtures/pomFixtures';
 import { STANDARD_USER, VALID_CHECKOUT_DATA } from '../src/test-data';
 
+/**
+ * Helper function to add a product to cart and wait for cart state to sync
+ */
+async function addProductToCart(
+  page: import('@playwright/test').Page
+): Promise<void> {
+  const firstAddButton = page.getByRole('button', { name: 'Add' }).first();
+  await firstAddButton.click();
+  // Wait for the "In Cart" button to appear - this confirms the UI updated
+  await page.getByRole('button', { name: /In Cart/i }).first().waitFor({ state: 'visible', timeout: 10000 });
+  // Wait for the cart badge in navbar to show a number (indicating cart has items)
+  await page.locator('nav a[href="/cart"]').filter({ hasText: /\d+/ }).waitFor({ state: 'visible', timeout: 10000 });
+}
+
 test.describe('Order Management Module', () => {
   test.describe('FR-ORD-001: Orders Page Access', () => {
     test('Only authenticated users can view orders', async ({ ordersPage, page }) => {
@@ -30,13 +44,11 @@ test.describe('Order Management Module', () => {
 
       await test.step('Add a product to cart', async () => {
         await catalogPage.goto();
-        const firstAddButton = page.getByRole('button', { name: 'Add' }).first();
-        await firstAddButton.click();
-        await expect(page.getByRole('button', { name: /In Cart/i }).first()).toBeVisible();
+        await addProductToCart(page);
       });
 
       await test.step('Complete checkout', async () => {
-        await cartPage.goto();
+        await cartPage.gotoViaNavbar();
         await cartPage.waitForCartItems();
         await cartPage.clickProceedToCheckout();
         await checkoutPage.completeCheckout(
@@ -108,10 +120,8 @@ test.describe('Order Management Module', () => {
 
       await test.step('Add a product and complete checkout', async () => {
         await catalogPage.goto();
-        const firstAddButton = page.getByRole('button', { name: 'Add' }).first();
-        await firstAddButton.click();
-        await expect(page.getByRole('button', { name: /In Cart/i }).first()).toBeVisible();
-        await cartPage.goto();
+        await addProductToCart(page);
+        await cartPage.gotoViaNavbar();
         await cartPage.waitForCartItems();
         await cartPage.clickProceedToCheckout();
         await checkoutPage.completeCheckout(
@@ -171,10 +181,8 @@ test.describe('Order Management Module', () => {
 
       await test.step('Add a product and complete checkout', async () => {
         await catalogPage.goto();
-        const firstAddButton = page.getByRole('button', { name: 'Add' }).first();
-        await firstAddButton.click();
-        await expect(page.getByRole('button', { name: /In Cart/i }).first()).toBeVisible();
-        await cartPage.goto();
+        await addProductToCart(page);
+        await cartPage.gotoViaNavbar();
         await cartPage.waitForCartItems();
         await cartPage.clickProceedToCheckout();
         await checkoutPage.completeCheckout(

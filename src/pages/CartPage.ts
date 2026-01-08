@@ -42,11 +42,22 @@ export class CartPage {
   }
 
   /**
-   * Navigate to the cart page and wait for content to load
+   * Navigate to the cart page directly (full page navigation)
+   * Use gotoViaNavbar() instead when cart has items added in the current session
    */
   async goto(): Promise<void> {
     await this.page.goto('/cart');
     // Wait for the page heading to be visible, indicating content has loaded
+    await this.pageHeading.waitFor({ state: 'visible', timeout: 10000 });
+  }
+
+  /**
+   * Navigate to cart by clicking the cart icon in the navbar
+   * This preserves client-side state (cart items added in current session)
+   */
+  async gotoViaNavbar(): Promise<void> {
+    await this.page.locator('nav a[href="/cart"]').click();
+    // Wait for the page heading to be visible
     await this.pageHeading.waitFor({ state: 'visible', timeout: 10000 });
   }
 

@@ -124,6 +124,28 @@ export class NavBar {
   }
 
   /**
+   * Wait for cart badge to show at least one item
+   * Useful after adding products to cart
+   */
+  async waitForCartItemCount(minCount: number = 1): Promise<void> {
+    // Wait for the cart link to show a number >= minCount
+    await this.page.waitForFunction(
+      (min) => {
+        const cartLink = document.querySelector('nav a[href="/cart"]');
+        if (!cartLink) return false;
+        const text = cartLink.textContent ?? '';
+        const match = text.match(/\d+/);
+        if (match) {
+          return parseInt(match[0], 10) >= min;
+        }
+        return false;
+      },
+      minCount,
+      { timeout: 10000 }
+    );
+  }
+
+  /**
    * Get the displayed username
    */
   async getUsername(): Promise<string> {

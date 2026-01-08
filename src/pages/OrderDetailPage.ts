@@ -36,8 +36,9 @@ export class OrderDetailPage {
     // Ordered items - each order item has product name and price
     this.orderedItems = page.getByRole('heading', { name: /Order Items/i }).locator('..').locator('div > div');
 
-    // Order total - look for Total label and get sibling value
-    this.orderTotal = page.getByText(/^Total$/).locator('..').locator('div').last();
+    // Order total - find the container that has both "Total" and a price
+    // Using a more specific locator to get the total row
+    this.orderTotal = page.getByText('Total$').first();
 
     // Navigation - "Continue Shopping" link on order detail page
     this.backToOrdersLink = page.getByRole('link', { name: /Continue Shopping|Back to Orders|View All Orders/i });

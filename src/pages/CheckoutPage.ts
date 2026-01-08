@@ -70,8 +70,8 @@ export class CheckoutPage {
     // Place Order button (includes price, e.g., "Place Order - $129.99")
     this.placeOrderButton = page.getByRole('button', { name: /Place Order/i });
 
-    // Validation errors
-    this.validationErrors = page.getByRole('alert');
+    // Validation errors - these are styled red text elements with "is required" or "invalid" messages
+    this.validationErrors = page.locator('text=/is required|invalid/i');
   }
 
   /**
@@ -135,7 +135,7 @@ export class CheckoutPage {
   }
 
   /**
-   * Complete checkout with all information
+   * Complete checkout with all information and wait for order confirmation
    */
   async completeCheckout(
     shippingInfo: { firstName: string; lastName: string; address: string },
@@ -143,6 +143,8 @@ export class CheckoutPage {
   ): Promise<void> {
     await this.fillCheckoutForm(shippingInfo, paymentInfo);
     await this.clickPlaceOrder();
+    // Wait for navigation to order confirmation page
+    await this.page.waitForURL(/\/orders\/\d+/, { timeout: 15000 });
   }
 
   /**

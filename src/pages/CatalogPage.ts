@@ -97,10 +97,30 @@ export class CatalogPage {
   }
 
   /**
-   * Add a product to cart
+   * Add a product to cart and wait for confirmation
+   * Waits for the "In Cart" button to appear, indicating the cart was updated
    */
   async addToCart(productName: string): Promise<void> {
     await this.getAddButton(productName).click();
+    // Wait for the button to change to "In Cart" indicating the cart was updated
+    await this.getInCartButton(productName).waitFor({ state: 'visible', timeout: 10000 });
+  }
+
+  /**
+   * Add any product to cart (first available product with Add button)
+   * Returns the product name that was added
+   */
+  async addFirstAvailableProductToCart(): Promise<string> {
+    // Find the first product card with an "Add" button
+    const firstAddButton = this.page.getByRole('button', { name: 'Add' }).first();
+    const productCard = firstAddButton.locator('xpath=ancestor::a');
+    const productName = await productCard.getByRole('heading').textContent() ?? '';
+    
+    // Click add and wait for In Cart button
+    await firstAddButton.click();
+    await this.page.getByRole('button', { name: /In Cart/i }).first().waitFor({ state: 'visible', timeout: 10000 });
+    
+    return productName;
   }
 
   /**

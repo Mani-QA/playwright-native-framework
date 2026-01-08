@@ -1,6 +1,22 @@
 import { test, expect } from '../src/fixtures/pomFixtures';
 import { STANDARD_USER } from '../src/test-data';
 
+/**
+ * Helper function to add a product to cart and wait for cart state to sync
+ * This ensures the cart state is fully synced before proceeding
+ */
+async function addProductToCart(
+  page: import('@playwright/test').Page
+): Promise<void> {
+  const firstAddButton = page.getByRole('button', { name: 'Add' }).first();
+  await firstAddButton.click();
+  // Wait for the "In Cart" button to appear - this confirms the UI updated
+  await page.getByRole('button', { name: /In Cart/i }).first().waitFor({ state: 'visible', timeout: 10000 });
+  // Wait for the cart badge in navbar to show a number (indicating cart has items)
+  // The cart badge is in the nav link to /cart
+  await page.locator('nav a[href="/cart"]').filter({ hasText: /\d+/ }).waitFor({ state: 'visible', timeout: 10000 });
+}
+
 test.describe('Shopping Cart Module', () => {
   test.describe('FR-CART-001: Empty Cart Display', () => {
     test('Empty cart shows appropriate message', async ({ cartPage }) => {
@@ -32,15 +48,12 @@ test.describe('Shopping Cart Module', () => {
 
       await test.step('Navigate to catalog and add a product', async () => {
         await catalogPage.goto();
-        // Find the first Add button in the catalog
-        const firstAddButton = page.getByRole('button', { name: 'Add' }).first();
-        await firstAddButton.click();
-        // Wait for the "In Cart" button to appear, confirming product was added
-        await expect(page.getByRole('button', { name: /In Cart/i }).first()).toBeVisible();
+        await addProductToCart(page);
       });
 
-      await test.step('Navigate to cart page', async () => {
-        await cartPage.goto();
+      await test.step('Navigate to cart page via navbar', async () => {
+        // Use navbar to navigate (preserves client-side cart state)
+        await cartPage.gotoViaNavbar();
         await cartPage.waitForCartItems();
       });
 
@@ -69,30 +82,36 @@ test.describe('Shopping Cart Module', () => {
 
       await test.step('Navigate to catalog and add a product', async () => {
         await catalogPage.goto();
-        const firstAddButton = page.getByRole('button', { name: 'Add' }).first();
-        await firstAddButton.click();
-        // Wait for the "In Cart" button to appear
-        await expect(page.getByRole('button', { name: /In Cart/i }).first()).toBeVisible();
+        await addProductToCart(page);
       });
 
-      await test.step('Navigate to cart page', async () => {
-        await cartPage.goto();
+      await test.step('Navigate to cart page via navbar', async () => {
+        await cartPage.gotoViaNavbar();
         await cartPage.waitForCartItems();
+        // Wait for the product link to be visible in main (confirms cart items rendered)
+        await page.getByRole('main').locator('a[href^="/products/"]').first().waitFor({ state: 'visible', timeout: 10000 });
       });
 
       await test.step('Verify initial quantity is 1', async () => {
-        // Quantity is displayed as text between - and + buttons
-        await expect(page.getByRole('main').getByText('1', { exact: true }).first()).toBeVisible();
+        // Verify cart badge shows 1
+        await expect(page.getByRole('navigation').locator('a[href="/cart"]')).toContainText('1', { timeout: 5000 });
       });
 
       await test.step('Click increase quantity button', async () => {
-        // The increase button is the second button in the quantity controls
-        const increaseButton = page.getByRole('main').getByRole('button').nth(1);
-        await increaseButton.click();
+        // Wait for buttons to render (minus, plus, trash)
+        await page.getByRole('main').locator('button:has(svg)').nth(1).waitFor({ state: 'visible', timeout: 5000 });
+        const mainButtons = page.getByRole('main').locator('button:has(svg)');
+        const plusButton = mainButtons.nth(1); // 0=minus (disabled), 1=plus, 2=trash
+        await plusButton.click();
+        // Wait for UI update
+        await page.waitForTimeout(500);
+        // Verify the quantity text in the cart item updated
+        await expect(page.getByRole('main').getByText('2', { exact: true })).toBeVisible({ timeout: 5000 });
       });
 
       await test.step('Verify quantity increased', async () => {
-        await expect(page.getByRole('main').getByText('2', { exact: true }).first()).toBeVisible();
+        // Verify cart badge shows 2
+        await expect(page.getByRole('navigation').locator('a[href="/cart"]')).toContainText('2', { timeout: 5000 });
       });
     });
   });
@@ -111,30 +130,45 @@ test.describe('Shopping Cart Module', () => {
 
       await test.step('Navigate to catalog and add a product', async () => {
         await catalogPage.goto();
-        const firstAddButton = page.getByRole('button', { name: 'Add' }).first();
-        await firstAddButton.click();
-        await expect(page.getByRole('button', { name: /In Cart/i }).first()).toBeVisible();
+        await addProductToCart(page);
       });
 
-      await test.step('Navigate to cart page', async () => {
-        await cartPage.goto();
+      await test.step('Navigate to cart page via navbar', async () => {
+        await cartPage.gotoViaNavbar();
         await cartPage.waitForCartItems();
+        // Wait for the product link to be visible in main (confirms cart items rendered)
+        await page.getByRole('main').locator('a[href^="/products/"]').first().waitFor({ state: 'visible', timeout: 10000 });
       });
 
       await test.step('Increase quantity to 2 first', async () => {
-        const increaseButton = page.getByRole('main').getByRole('button').nth(1);
-        await increaseButton.click();
-        await expect(page.getByRole('main').getByText('2', { exact: true }).first()).toBeVisible();
+        // The plus button is in the cart item area with SVG icon
+        // Wait for buttons to be rendered (minus, plus, trash)
+        await page.getByRole('main').locator('button:has(svg)').nth(1).waitFor({ state: 'visible', timeout: 5000 });
+        const mainButtons = page.getByRole('main').locator('button:has(svg)');
+        const plusButton = mainButtons.nth(1); // 0=minus (disabled), 1=plus, 2=trash
+        
+        // Click and wait for response - retry if needed
+        await plusButton.click();
+        // Wait a moment for the click to register and update state
+        await page.waitForTimeout(500);
+        
+        // Verify the quantity text in the cart item updated
+        await expect(page.getByRole('main').getByText('2', { exact: true })).toBeVisible({ timeout: 5000 });
+        
+        // Also verify the cart badge
+        await expect(page.getByRole('navigation').locator('a[href="/cart"]')).toContainText('2', { timeout: 5000 });
       });
 
       await test.step('Click decrease quantity button', async () => {
-        // First button is the decrease button (now enabled since qty > 1)
-        const decreaseButton = page.getByRole('main').getByRole('button').first();
-        await decreaseButton.click();
+        // Now the - button should be enabled (qty is 2)
+        const mainButtons = page.getByRole('main').locator('button:has(svg)');
+        const minusButton = mainButtons.first();
+        await minusButton.click();
       });
 
       await test.step('Verify quantity decreased', async () => {
-        await expect(page.getByRole('main').getByText('1', { exact: true }).first()).toBeVisible();
+        // Verify cart badge shows 1 again
+        await expect(page.getByRole('navigation').locator('a[href="/cart"]')).toContainText('1', { timeout: 5000 });
       });
     });
   });
@@ -153,24 +187,24 @@ test.describe('Shopping Cart Module', () => {
 
       await test.step('Navigate to catalog and add a product', async () => {
         await catalogPage.goto();
-        const firstAddButton = page.getByRole('button', { name: 'Add' }).first();
-        await firstAddButton.click();
-        await expect(page.getByRole('button', { name: /In Cart/i }).first()).toBeVisible();
+        await addProductToCart(page);
       });
 
-      await test.step('Navigate to cart page', async () => {
-        await cartPage.goto();
+      await test.step('Navigate to cart page via navbar', async () => {
+        await cartPage.gotoViaNavbar();
         await cartPage.waitForCartItems();
       });
 
       await test.step('Verify quantity is 1', async () => {
-        await expect(page.getByRole('main').getByText('1', { exact: true }).first()).toBeVisible();
+        const cartItem = cartPage.cartItems.first().locator('..');
+        await expect(cartItem.getByText('1', { exact: true })).toBeVisible();
       });
 
       await test.step('Verify decrease button is disabled', async () => {
-        // First button is the decrease button - should be disabled at qty 1
-        const decreaseButton = page.getByRole('main').getByRole('button').first();
-        await expect(decreaseButton).toBeDisabled();
+        // The - button should be disabled at qty 1
+        const cartItem = cartPage.cartItems.first().locator('..');
+        const minusButton = cartItem.locator('button').filter({ hasText: '-' }).or(cartItem.locator('button:has(svg)').first());
+        await expect(minusButton).toBeDisabled();
       });
     });
   });
@@ -189,24 +223,25 @@ test.describe('Shopping Cart Module', () => {
 
       await test.step('Navigate to catalog and add a product', async () => {
         await catalogPage.goto();
-        const firstAddButton = page.getByRole('button', { name: 'Add' }).first();
-        await firstAddButton.click();
-        await expect(page.getByRole('button', { name: /In Cart/i }).first()).toBeVisible();
+        await addProductToCart(page);
       });
 
-      await test.step('Navigate to cart page', async () => {
-        await cartPage.goto();
+      await test.step('Navigate to cart page via navbar', async () => {
+        await cartPage.gotoViaNavbar();
         await cartPage.waitForCartItems();
       });
 
       await test.step('Click remove button', async () => {
-        // The remove/trash button is the button after increase quantity button (3rd button in sequence)
-        // Buttons order: decrease (disabled), increase, remove
-        const removeButton = page.getByRole('main').getByRole('button').nth(2);
-        await removeButton.click();
+        // The trash button is a button with SVG icon after the +/- buttons
+        // Button order in main area with SVG: 0=minus, 1=plus, 2=trash
+        const mainButtons = page.getByRole('main').locator('button:has(svg)');
+        const trashButton = mainButtons.nth(2);
+        await trashButton.click();
       });
 
       await test.step('Verify cart is empty', async () => {
+        // Wait for the empty cart message to appear
+        await cartPage.emptyCartMessage.waitFor({ state: 'visible', timeout: 10000 });
         await expect(cartPage.emptyCartMessage).toBeVisible();
       });
     });
@@ -226,18 +261,18 @@ test.describe('Shopping Cart Module', () => {
 
       await test.step('Navigate to catalog and add multiple products', async () => {
         await catalogPage.goto();
-        const addButtons = page.getByRole('button', { name: 'Add' });
-        const buttonCount = await addButtons.count();
-        // Add up to 2 products
-        for (let i = 0; i < Math.min(2, buttonCount); i++) {
-          await addButtons.nth(i).click();
-          // Wait a moment for the cart to update
-          await page.waitForTimeout(200);
+        // Add first product
+        await addProductToCart(page);
+        // Add second product (if available)
+        const secondAddButton = page.getByRole('button', { name: 'Add' }).first();
+        if (await secondAddButton.isVisible()) {
+          await secondAddButton.click();
+          await page.getByRole('button', { name: /In Cart/i }).nth(1).waitFor({ state: 'visible', timeout: 10000 });
         }
       });
 
-      await test.step('Navigate to cart page', async () => {
-        await cartPage.goto();
+      await test.step('Navigate to cart page via navbar', async () => {
+        await cartPage.gotoViaNavbar();
         await cartPage.waitForCartItems();
       });
 
@@ -265,13 +300,11 @@ test.describe('Shopping Cart Module', () => {
 
       await test.step('Navigate to catalog and add a product', async () => {
         await catalogPage.goto();
-        const firstAddButton = page.getByRole('button', { name: 'Add' }).first();
-        await firstAddButton.click();
-        await expect(page.getByRole('button', { name: /In Cart/i }).first()).toBeVisible();
+        await addProductToCart(page);
       });
 
-      await test.step('Navigate to cart page', async () => {
-        await cartPage.goto();
+      await test.step('Navigate to cart page via navbar', async () => {
+        await cartPage.gotoViaNavbar();
         await cartPage.waitForCartItems();
       });
 
@@ -293,13 +326,11 @@ test.describe('Shopping Cart Module', () => {
     }) => {
       await test.step('Navigate to catalog and add a product', async () => {
         await catalogPage.goto();
-        const firstAddButton = page.getByRole('button', { name: 'Add' }).first();
-        await firstAddButton.click();
-        await expect(page.getByRole('button', { name: /In Cart/i }).first()).toBeVisible();
+        await addProductToCart(page);
       });
 
-      await test.step('Navigate to cart page', async () => {
-        await cartPage.goto();
+      await test.step('Navigate to cart page via navbar', async () => {
+        await cartPage.gotoViaNavbar();
         await cartPage.waitForCartItems();
       });
 
