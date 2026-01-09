@@ -16,6 +16,7 @@ A production-ready, enterprise-grade Playwright automation framework for the [QA
 - [Test Data Management](#test-data-management)
 - [Running Tests](#running-tests)
 - [CI/CD Integration](#cicd-integration)
+- [Playwright Test Agents](#playwright-test-agents)
 - [Best Practices](#best-practices)
 - [Troubleshooting](#troubleshooting)
 
@@ -477,6 +478,136 @@ The framework uses Playwright's storage state feature to avoid logging in for ev
 2. Other tests reuse the saved session via `storageState`
 
 This dramatically speeds up test execution.
+
+---
+
+## Playwright Test Agents
+
+This framework integrates with [Playwright Test Agents](https://playwright.dev/docs/test-agents), AI-powered tools that help with test planning, generation, and automatic repair.
+
+### What Are Test Agents?
+
+| Agent | Purpose | Output |
+|-------|---------|--------|
+| **Planner** | Explores app and creates test plans | Markdown specs in `specs/` |
+| **Generator** | Converts specs to executable tests | Test files in `tests/` |
+| **Healer** | Automatically fixes failing tests | Updated test code |
+
+### Architecture
+
+```
+┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
+│  🎭 Planner     │───▶│  🎭 Generator   │───▶│  🎭 Healer      │
+│                 │    │                 │    │                 │
+│ Explore app     │    │ Create tests    │    │ Fix failures    │
+│ Create specs    │    │ from specs      │    │ Auto-repair     │
+└─────────────────┘    └─────────────────┘    └─────────────────┘
+        │                      │                      │
+        ▼                      ▼                      ▼
+   specs/*.md            tests/*.spec.ts       Fixed tests
+```
+
+### Setup
+
+Agent definitions are located in `.github/agents/`:
+- `playwright-test-planner.agent.md`
+- `playwright-test-generator.agent.md`
+- `playwright-test-healer.agent.md`
+
+MCP configuration is in `.vscode/mcp.json`.
+
+### Using Agents in Cursor
+
+#### 1. Planner Agent
+
+Create test plans by exploring the application:
+
+```
+@planner Create a test plan for the user registration flow
+```
+
+Include the seed test for context:
+```
+@planner Using tests/seed.spec.ts as reference, create a plan for admin dashboard tests
+```
+
+Output: Markdown file in `specs/` directory
+
+#### 2. Generator Agent
+
+Generate executable tests from specs:
+
+```
+@generator Create tests from specs/checkout-flow.md
+```
+
+The generator will:
+- Use your existing fixtures from `pomFixtures.ts`
+- Follow your locator strategy (getByRole, getByLabel, etc.)
+- Apply `test.step()` for organization
+
+#### 3. Healer Agent
+
+Automatically fix failing tests:
+
+```
+@healer Fix the failing test in tests/cart.spec.ts
+```
+
+The healer will:
+- Analyze the failure
+- Inspect current UI elements
+- Update locators or add waits
+- Re-run until passing
+
+### Directory Structure
+
+```
+specs/                           # Test plans (human-readable)
+├── README.md                    # Spec format documentation
+└── checkout-flow.md             # Example test plan
+
+tests/
+├── seed.spec.ts                 # Seed test for agent exploration
+└── *.spec.ts                    # Generated and existing tests
+
+.github/agents/                  # Agent definitions
+├── playwright-test-planner.agent.md
+├── playwright-test-generator.agent.md
+└── playwright-test-healer.agent.md
+```
+
+### Seed Test
+
+The `tests/seed.spec.ts` file provides the base environment for agents:
+
+```typescript
+import { test, expect } from '../src/fixtures/pomFixtures';
+
+test.describe('Seed Tests for Agent Exploration', () => {
+  test('seed - authenticated exploration', async ({
+    loginPage, catalogPage, cartPage, navBar,
+  }) => {
+    // Demonstrates fixtures, POM pattern, and common flows
+    // Agents use this as a reference for generated tests
+  });
+});
+```
+
+### Agent Commands
+
+| Command | Description |
+|---------|-------------|
+| `npm run agent:init` | Regenerate agent definitions |
+| `npm run agent:seed` | Run seed tests |
+| `npm run agent:mcp` | Start MCP server manually |
+
+### Best Practices for Agents
+
+1. **Keep seed tests up-to-date** - Agents reference seed tests for patterns
+2. **Write detailed specs** - More detail = better generated tests
+3. **Review generated tests** - Always verify before committing
+4. **Use healer incrementally** - Fix one test at a time
 
 ---
 

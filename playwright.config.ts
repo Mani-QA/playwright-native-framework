@@ -14,9 +14,11 @@ export default defineConfig({
   // Fail the build on CI if you accidentally left test.only in the source code
   forbidOnly: !!process.env.CI,
 
-  // Only run Priority 1 and 2 tests by default
+  // By default, run tests matching these patterns:
+  // - @p1, @p2: Priority 1 and 2 tests  
+  // - @agent: Agent exploration/seed tests
   // Use --grep="@p3|@p4" to run lower priority tests
-  grep: /@p1|@p2/,
+  grep: /@p1|@p2|@agent/,
 
   // Retry on CI only
   retries: process.env.CI ? 2 : 0,
