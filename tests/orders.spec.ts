@@ -5,18 +5,27 @@ import { STANDARD_USER, VALID_CHECKOUT_DATA } from '../src/test-data';
  * Helper function to add a product to cart and wait for cart state to sync
  */
 async function addProductToCart(
-  page: import('@playwright/test').Page
+  page: import('@playwright/test').Page,
+  expect: typeof import('@playwright/test').expect
 ): Promise<void> {
-  const firstAddButton = page.getByRole('button', { name: 'Add' }).first();
-  await firstAddButton.click();
-  // Wait for the "In Cart" button to appear - this confirms the UI updated
-  await page.getByRole('button', { name: /In Cart/i }).first().waitFor({ state: 'visible', timeout: 10000 });
+  // Wait for catalog to be fully loaded - wait for product cards to appear
+  await page.locator('[data-testid^="product-card-"]').first().waitFor({ state: 'visible', timeout: 10000 });
+  
+  // Find an enabled "Add" button (product not already in cart)
+  const addButtons = page.getByRole('button', { name: /Add .+ to cart/i });
+  const firstEnabledButton = addButtons.first();
+  
+  // Wait for the button to be visible and enabled
+  await firstEnabledButton.waitFor({ state: 'visible', timeout: 10000 });
+  await expect(firstEnabledButton).toBeEnabled({ timeout: 15000 });
+  await firstEnabledButton.click();
+  
   // Wait for the cart badge in navbar to show a number (indicating cart has items)
   await page.locator('nav a[href="/cart"]').filter({ hasText: /\d+/ }).waitFor({ state: 'visible', timeout: 10000 });
 }
 
 test.describe('Order Management Module', () => {
-  test.describe('FR-ORD-001: Orders Page Access', () => {
+  test.describe('@p1 FR-ORD-001: Orders Page Access', () => {
     test('Only authenticated users can view orders', async ({ ordersPage, page }) => {
       await test.step('Navigate to orders page without authentication', async () => {
         await ordersPage.goto();
@@ -28,7 +37,7 @@ test.describe('Order Management Module', () => {
     });
   });
 
-  test.describe('FR-ORD-002: Orders List Display', () => {
+  test.describe('@p2 FR-ORD-002: Orders List Display', () => {
     test('Login with Standard User - orders page displays order history after placing order', async ({
       loginPage,
       catalogPage,
@@ -44,7 +53,7 @@ test.describe('Order Management Module', () => {
 
       await test.step('Add a product to cart', async () => {
         await catalogPage.goto();
-        await addProductToCart(page);
+        await addProductToCart(page, expect);
       });
 
       await test.step('Complete checkout', async () => {
@@ -72,7 +81,7 @@ test.describe('Order Management Module', () => {
     });
   });
 
-  test.describe('FR-ORD-003: Empty Orders State', () => {
+  test.describe('@p3 FR-ORD-003: Empty Orders State', () => {
     test('Login with Standard User - orders page displays correctly', async ({
       loginPage,
       ordersPage,
@@ -104,7 +113,7 @@ test.describe('Order Management Module', () => {
     });
   });
 
-  test.describe('FR-ORD-004: Navigate to Order Detail', () => {
+  test.describe('@p3 FR-ORD-004: Navigate to Order Detail', () => {
     test('Login with Standard User - clicking order navigates to detail page', async ({
       loginPage,
       catalogPage,
@@ -120,7 +129,7 @@ test.describe('Order Management Module', () => {
 
       await test.step('Add a product and complete checkout', async () => {
         await catalogPage.goto();
-        await addProductToCart(page);
+        await addProductToCart(page, expect);
         await cartPage.gotoViaNavbar();
         await cartPage.waitForCartItems();
         await cartPage.clickProceedToCheckout();
@@ -144,7 +153,7 @@ test.describe('Order Management Module', () => {
     });
   });
 
-  test.describe('FR-ORD-005: Username Navigation to Orders', () => {
+  test.describe('@p4 FR-ORD-005: Username Navigation to Orders', () => {
     test('Login with Standard User - clicking username navigates to orders', async ({
       loginPage,
       navBar,
@@ -165,7 +174,7 @@ test.describe('Order Management Module', () => {
     });
   });
 
-  test.describe('FR-ORD-006: Order Confirmation Display', () => {
+  test.describe('@p2 FR-ORD-006: Order Confirmation Display', () => {
     test('Login with Standard User - order confirmation shows order details', async ({
       loginPage,
       catalogPage,
@@ -181,7 +190,7 @@ test.describe('Order Management Module', () => {
 
       await test.step('Add a product and complete checkout', async () => {
         await catalogPage.goto();
-        await addProductToCart(page);
+        await addProductToCart(page, expect);
         await cartPage.gotoViaNavbar();
         await cartPage.waitForCartItems();
         await cartPage.clickProceedToCheckout();
@@ -209,7 +218,7 @@ test.describe('Order Management Module', () => {
     });
   });
 
-  test.describe('FR-ORD-008: Order Access Control', () => {
+  test.describe('@p4 FR-ORD-008: Order Access Control', () => {
     test('Login with Standard User - accessing non-existent order shows 404', async ({
       loginPage,
       orderDetailPage,

@@ -2,7 +2,7 @@ import { test, expect } from '../src/fixtures/pomFixtures';
 import { STANDARD_USER } from '../src/test-data';
 
 test.describe('Product Catalog Module', () => {
-  test.describe('FR-PROD-001: Home Page Hero Section', () => {
+  test.describe('@p3 FR-PROD-001: Home Page Hero Section', () => {
     test('Home page displays hero section with call-to-action', async ({ homePage }) => {
       await test.step('Navigate to home page', async () => {
         await homePage.goto();
@@ -39,7 +39,7 @@ test.describe('Product Catalog Module', () => {
     });
   });
 
-  test.describe('FR-PROD-002: Featured Products Display', () => {
+  test.describe('@p3 FR-PROD-002: Featured Products Display', () => {
     test('Home page displays featured products section', async ({ homePage, page }) => {
       await test.step('Navigate to home page', async () => {
         await homePage.goto();
@@ -52,7 +52,7 @@ test.describe('Product Catalog Module', () => {
     });
   });
 
-  test.describe('FR-PROD-003: Product Listing', () => {
+  test.describe('@p1 FR-PROD-003: Product Listing', () => {
     test('Catalog page displays all active products in grid', async ({ catalogPage }) => {
       await test.step('Navigate to catalog page', async () => {
         await catalogPage.goto();
@@ -69,7 +69,7 @@ test.describe('Product Catalog Module', () => {
     });
   });
 
-  test.describe('FR-PROD-006: Add to Cart from Catalog', () => {
+  test.describe('@p1 FR-PROD-006: Add to Cart from Catalog', () => {
     test('Login with Standard User - can add product to cart from catalog', async ({
       loginPage,
       catalogPage,
@@ -90,8 +90,12 @@ test.describe('Product Catalog Module', () => {
       });
 
       await test.step('Add first available product to cart', async () => {
-        const firstAddButton = page.getByRole('button', { name: 'Add' }).first();
-        await firstAddButton.click();
+        // Wait for catalog to be fully loaded
+        await page.locator('[data-testid^="product-card-"]').first().waitFor({ state: 'visible', timeout: 10000 });
+        const addButton = page.getByRole('button', { name: /Add .+ to cart/i }).first();
+        await addButton.waitFor({ state: 'visible', timeout: 10000 });
+        await expect(addButton).toBeEnabled({ timeout: 15000 });
+        await addButton.click();
       });
 
       await test.step('Verify cart badge updates to show item count', async () => {
@@ -101,7 +105,7 @@ test.describe('Product Catalog Module', () => {
     });
   });
 
-  test.describe('FR-PROD-007: In Cart Button Navigation', () => {
+  test.describe('@p3 FR-PROD-007: In Cart Button Navigation', () => {
     test('Login with Standard User - In Cart button navigates to cart', async ({
       loginPage,
       catalogPage,
@@ -117,8 +121,12 @@ test.describe('Product Catalog Module', () => {
       });
 
       await test.step('Add a product to cart', async () => {
-        const firstAddButton = page.getByRole('button', { name: 'Add' }).first();
-        await firstAddButton.click();
+        // Wait for catalog to be fully loaded
+        await page.locator('[data-testid^="product-card-"]').first().waitFor({ state: 'visible', timeout: 10000 });
+        const addButton = page.getByRole('button', { name: /Add .+ to cart/i }).first();
+        await addButton.waitFor({ state: 'visible', timeout: 10000 });
+        await expect(addButton).toBeEnabled({ timeout: 15000 });
+        await addButton.click();
       });
 
       await test.step('Click In Cart button', async () => {
@@ -132,7 +140,7 @@ test.describe('Product Catalog Module', () => {
     });
   });
 
-  test.describe('FR-PROD-009: Product Detail Display', () => {
+  test.describe('@p3 FR-PROD-009: Product Detail Display', () => {
     test('Product detail page shows complete product information', async ({
       catalogPage,
       productDetailPage,
@@ -156,7 +164,7 @@ test.describe('Product Catalog Module', () => {
     });
   });
 
-  test.describe('FR-PROD-010: Add to Cart from Detail Page', () => {
+  test.describe('@p2 FR-PROD-010: Add to Cart from Detail Page', () => {
     test('Login with Standard User - can add product from detail page', async ({
       loginPage,
       catalogPage,
@@ -184,7 +192,7 @@ test.describe('Product Catalog Module', () => {
     });
   });
 
-  test.describe('FR-PROD-011: Product Not Found', () => {
+  test.describe('@p4 FR-PROD-011: Product Not Found', () => {
     test('Invalid product slug shows 404 page', async ({ productDetailPage }) => {
       await test.step('Navigate to invalid product slug', async () => {
         await productDetailPage.goto('invalid-product-slug-12345');

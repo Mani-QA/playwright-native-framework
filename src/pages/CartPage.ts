@@ -56,9 +56,24 @@ export class CartPage {
    * This preserves client-side state (cart items added in current session)
    */
   async gotoViaNavbar(): Promise<void> {
-    await this.page.locator('nav a[href="/cart"]').click();
+    // Get current cart count from badge before navigation
+    const cartBadge = this.page.locator('nav a[href="/cart"]');
+    const badgeText = await cartBadge.textContent() || '0';
+    const expectedCount = parseInt(badgeText.match(/\d+/)?.[0] || '0', 10);
+
+    // Click the cart link and wait for URL to be /cart
+    await Promise.all([
+      this.page.waitForURL(/\/cart/, { timeout: 10000 }),
+      cartBadge.click(),
+    ]);
+
     // Wait for the page heading to be visible
     await this.pageHeading.waitFor({ state: 'visible', timeout: 10000 });
+
+    // If we had items in cart, wait for them to render
+    if (expectedCount > 0) {
+      await this.cartItems.first().waitFor({ state: 'visible', timeout: 10000 });
+    }
   }
 
   /**
@@ -162,7 +177,11 @@ export class CartPage {
    * Click Proceed to Checkout
    */
   async clickProceedToCheckout(): Promise<void> {
-    await this.proceedToCheckoutButton.click();
+    await this.proceedToCheckoutButton.waitFor({ state: 'visible', timeout: 10000 });
+    // Use force click to handle React re-render stability issues
+    await this.proceedToCheckoutButton.click({ force: true });
+    // Wait for navigation to checkout page
+    await this.page.waitForURL(/\/checkout/, { timeout: 10000 });
   }
 
   /**

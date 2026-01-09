@@ -48,10 +48,10 @@ export class CheckoutPage {
 
     // Shipping Information section
     this.shippingSection = page.getByRole('heading', { name: /Shipping Information/i }).locator('..');
-    this.firstNameInput = page.getByLabel('First Name');
-    this.lastNameInput = page.getByLabel('Last Name');
-    // Address field uses placeholder text, not label
-    this.addressInput = page.getByPlaceholder('Enter your full address');
+    this.firstNameInput = page.getByLabel(/First name/i);
+    this.lastNameInput = page.getByLabel(/Last name/i);
+    // Address field - try label first, then placeholder
+    this.addressInput = page.getByLabel(/Shipping Address/i).or(page.getByPlaceholder('Enter your full address'));
 
     // Payment Information section - use multiple strategies for robustness
     this.paymentSection = page.getByRole('group', { name: /Payment Information/i });
@@ -76,13 +76,14 @@ export class CheckoutPage {
 
   /**
    * Navigate to the checkout page and wait for content to load
+   * If not authenticated, may redirect to login page
    */
   async goto(): Promise<void> {
     await this.page.goto('/checkout');
     // Wait for the page to fully load
     await this.page.waitForLoadState('domcontentloaded');
-    // Wait for either checkout heading or empty cart message
-    await this.pageHeading.or(this.emptyCartMessage).waitFor({ state: 'visible', timeout: 15000 });
+    // Wait for URL to settle (may redirect to login or cart)
+    await this.page.waitForLoadState('load', { timeout: 10000 });
   }
 
   /**
@@ -90,8 +91,12 @@ export class CheckoutPage {
    * Uses explicit waits to handle React re-renders that may detach elements
    */
   async fillShippingInfo(firstName: string, lastName: string, address: string): Promise<void> {
+    // Scroll to top of form first
+    await this.pageHeading.scrollIntoViewIfNeeded();
+    
     // Wait for each field to be stable before filling to handle React re-renders
     await this.firstNameInput.waitFor({ state: 'visible', timeout: 10000 });
+    await this.firstNameInput.scrollIntoViewIfNeeded();
     await this.firstNameInput.fill(firstName);
     
     await this.lastNameInput.waitFor({ state: 'visible', timeout: 10000 });
@@ -150,7 +155,14 @@ export class CheckoutPage {
    * Click Place Order button
    */
   async clickPlaceOrder(): Promise<void> {
+    await this.placeOrderButton.waitFor({ state: 'visible', timeout: 10000 });
+    await this.placeOrderButton.scrollIntoViewIfNeeded();
+    
+    // Use the Playwright locator click directly
     await this.placeOrderButton.click();
+    
+    // Wait for navigation to order confirmation page
+    await this.page.waitForURL(/\/orders\/\d+/, { timeout: 30000 });
   }
 
   /**

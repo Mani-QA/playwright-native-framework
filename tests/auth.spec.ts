@@ -9,7 +9,7 @@ import {
 } from '../src/test-data';
 
 test.describe('Authentication Module', () => {
-  test.describe('FR-AUTH-001: Login Form Display', () => {
+  test.describe('@p1 FR-AUTH-001: Login Form Display', () => {
     test('Login page displays username and password input fields', async ({ loginPage, page }) => {
       await test.step('Navigate to login page', async () => {
         await loginPage.goto();
@@ -28,7 +28,7 @@ test.describe('Authentication Module', () => {
     });
   });
 
-  test.describe('FR-AUTH-002: Standard User Login', () => {
+  test.describe('@p1 FR-AUTH-002: Standard User Login', () => {
     test('Login with Standard User - should redirect to catalog', async ({
       loginPage,
       navBar,
@@ -52,7 +52,7 @@ test.describe('Authentication Module', () => {
     });
   });
 
-  test.describe('FR-AUTH-003: Locked User Login Rejection', () => {
+  test.describe('@p2 FR-AUTH-003: Locked User Login Rejection', () => {
     test('Login with Locked User - should display account locked error', async ({
       loginPage,
       page,
@@ -76,7 +76,7 @@ test.describe('Authentication Module', () => {
     });
   });
 
-  test.describe('FR-AUTH-004: Invalid Credentials Rejection', () => {
+  test.describe('@p2 FR-AUTH-004: Invalid Credentials Rejection', () => {
     test('Login with invalid credentials - should display error message', async ({
       loginPage,
       page,
@@ -100,7 +100,7 @@ test.describe('Authentication Module', () => {
     });
   });
 
-  test.describe('FR-AUTH-005: Admin User Login', () => {
+  test.describe('@p2 FR-AUTH-005: Admin User Login', () => {
     test('Login with Admin User - should have access to admin dashboard', async ({
       loginPage,
       navBar,
@@ -129,7 +129,7 @@ test.describe('Authentication Module', () => {
     });
   });
 
-  test.describe('FR-AUTH-006: Test Credential Quick Fill', () => {
+  test.describe('@p4 FR-AUTH-006: Test Credential Quick Fill', () => {
     test('Clicking test credential button fills form', async ({ loginPage }) => {
       await test.step('Navigate to login page', async () => {
         await loginPage.goto();
@@ -146,7 +146,7 @@ test.describe('Authentication Module', () => {
     });
   });
 
-  test.describe('FR-AUTH-007: Logout Functionality', () => {
+  test.describe('@p1 FR-AUTH-007: Logout Functionality', () => {
     test('Login with Standard User - logout should redirect to home', async ({
       loginPage,
       navBar,
@@ -178,7 +178,7 @@ test.describe('Authentication Module', () => {
     });
   });
 
-  test.describe('FR-AUTH-008: Session Persistence', () => {
+  test.describe('@p3 FR-AUTH-008: Session Persistence', () => {
     test('Login with Standard User - session persists after page refresh', async ({
       loginPage,
       navBar,
@@ -206,7 +206,7 @@ test.describe('Authentication Module', () => {
     });
   });
 
-  test.describe('FR-AUTH-009: Protected Route Redirect', () => {
+  test.describe('@p3 FR-AUTH-009: Protected Route Redirect', () => {
     test('Unauthenticated user redirected to login for checkout', async ({ page }) => {
       await test.step('Navigate directly to checkout page', async () => {
         await page.goto(URLS.checkout);

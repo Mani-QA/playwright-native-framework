@@ -2,7 +2,7 @@ import { test, expect } from '../src/fixtures/pomFixtures';
 import { STANDARD_USER } from '../src/test-data';
 
 test.describe('Navigation & Layout Module', () => {
-  test.describe('FR-NAV-001: Logo Navigation', () => {
+  test.describe('@p1 FR-NAV-001: Logo Navigation', () => {
     test('Clicking logo navigates to home', async ({ catalogPage, navBar, page }) => {
       await test.step('Navigate to catalog page', async () => {
         await catalogPage.goto();
@@ -18,7 +18,7 @@ test.describe('Navigation & Layout Module', () => {
     });
   });
 
-  test.describe('FR-NAV-002: Products Link', () => {
+  test.describe('@p1 FR-NAV-002: Products Link', () => {
     test('Products link navigates to catalog', async ({ homePage, navBar, page }) => {
       await test.step('Navigate to home page', async () => {
         await homePage.goto();
@@ -34,7 +34,7 @@ test.describe('Navigation & Layout Module', () => {
     });
   });
 
-  test.describe('FR-NAV-003: Cart Icon with Badge', () => {
+  test.describe('@p3 FR-NAV-003: Cart Icon with Badge', () => {
     test('Login with Standard User - cart icon shows item count after adding product', async ({
       loginPage,
       catalogPage,
@@ -56,8 +56,12 @@ test.describe('Navigation & Layout Module', () => {
       });
 
       await test.step('Add a product to cart', async () => {
-        const firstAddButton = page.getByRole('button', { name: 'Add' }).first();
-        await firstAddButton.click();
+        // Wait for catalog to be fully loaded
+        await page.locator('[data-testid^="product-card-"]').first().waitFor({ state: 'visible', timeout: 10000 });
+        const addButton = page.getByRole('button', { name: /Add .+ to cart/i }).first();
+        await addButton.waitFor({ state: 'visible', timeout: 10000 });
+        await expect(addButton).toBeEnabled({ timeout: 15000 });
+        await addButton.click();
       });
 
       await test.step('Verify cart badge updates', async () => {
@@ -91,7 +95,7 @@ test.describe('Navigation & Layout Module', () => {
     });
   });
 
-  test.describe('FR-NAV-004: Sign In Button (Guest)', () => {
+  test.describe('@p3 FR-NAV-004: Sign In Button (Guest)', () => {
     test('Sign In button shown for guests', async ({ homePage, navBar }) => {
       await test.step('Navigate to home page', async () => {
         await homePage.goto();
@@ -117,7 +121,7 @@ test.describe('Navigation & Layout Module', () => {
     });
   });
 
-  test.describe('FR-NAV-005: User Menu (Authenticated)', () => {
+  test.describe('@p3 FR-NAV-005: User Menu (Authenticated)', () => {
     test('Login with Standard User - shows username and logout button', async ({
       loginPage,
       navBar,
@@ -137,7 +141,7 @@ test.describe('Navigation & Layout Module', () => {
     });
   });
 
-  test.describe('FR-NAV-007: Footer Links', () => {
+  test.describe('@p4 FR-NAV-007: Footer Links', () => {
     test('Footer contains Products link', async ({ homePage, footer }) => {
       await test.step('Navigate to home page', async () => {
         await homePage.goto();

@@ -9,18 +9,27 @@ import {
  * Helper function to add a product to cart and wait for cart state to sync
  */
 async function addProductToCart(
-  page: import('@playwright/test').Page
+  page: import('@playwright/test').Page,
+  expect: typeof import('@playwright/test').expect
 ): Promise<void> {
-  const firstAddButton = page.getByRole('button', { name: 'Add' }).first();
-  await firstAddButton.click();
-  // Wait for the "In Cart" button to appear - this confirms the UI updated
-  await page.getByRole('button', { name: /In Cart/i }).first().waitFor({ state: 'visible', timeout: 10000 });
+  // Wait for catalog to be fully loaded - wait for product cards to appear
+  await page.locator('[data-testid^="product-card-"]').first().waitFor({ state: 'visible', timeout: 10000 });
+  
+  // Find an enabled "Add" button (product not already in cart)
+  const addButtons = page.getByRole('button', { name: /Add .+ to cart/i });
+  const firstEnabledButton = addButtons.first();
+  
+  // Wait for the button to be visible and enabled
+  await firstEnabledButton.waitFor({ state: 'visible', timeout: 10000 });
+  await expect(firstEnabledButton).toBeEnabled({ timeout: 15000 });
+  await firstEnabledButton.click();
+  
   // Wait for the cart badge in navbar to show a number (indicating cart has items)
   await page.locator('nav a[href="/cart"]').filter({ hasText: /\d+/ }).waitFor({ state: 'visible', timeout: 10000 });
 }
 
 test.describe('Checkout Module', () => {
-  test.describe('FR-CHK-001: Checkout Page Access', () => {
+  test.describe('@p3 FR-CHK-001: Checkout Page Access', () => {
     test('Only authenticated users can access checkout', async ({ checkoutPage, page }) => {
       await test.step('Navigate to checkout page without authentication', async () => {
         await checkoutPage.goto();
@@ -32,7 +41,7 @@ test.describe('Checkout Module', () => {
     });
   });
 
-  test.describe('FR-CHK-002: Empty Cart Redirect', () => {
+  test.describe('@p2 FR-CHK-002: Empty Cart Redirect', () => {
     test('Login with Standard User - checkout with empty cart redirects to cart', async ({
       loginPage,
       checkoutPage,
@@ -68,7 +77,7 @@ test.describe('Checkout Module', () => {
     });
   });
 
-  test.describe('FR-CHK-003: Checkout Form Display', () => {
+  test.describe('@p2 FR-CHK-003: Checkout Form Display', () => {
     test('Login with Standard User - checkout page displays shipping and payment forms', async ({
       loginPage,
       catalogPage,
@@ -83,7 +92,7 @@ test.describe('Checkout Module', () => {
 
       await test.step('Add a product to cart', async () => {
         await catalogPage.goto();
-        await addProductToCart(page);
+        await addProductToCart(page, expect);
       });
 
       await test.step('Navigate to checkout via cart', async () => {
@@ -111,7 +120,7 @@ test.describe('Checkout Module', () => {
     });
   });
 
-  test.describe('FR-CHK-007: Required Field Validation', () => {
+  test.describe('@p3 FR-CHK-007: Required Field Validation', () => {
     test('Login with Standard User - submitting empty form shows validation errors', async ({
       loginPage,
       catalogPage,
@@ -126,7 +135,7 @@ test.describe('Checkout Module', () => {
 
       await test.step('Add a product to cart', async () => {
         await catalogPage.goto();
-        await addProductToCart(page);
+        await addProductToCart(page, expect);
       });
 
       await test.step('Navigate to checkout via cart', async () => {
@@ -149,7 +158,7 @@ test.describe('Checkout Module', () => {
     });
   });
 
-  test.describe('FR-CHK-008: Valid Card Number Validation (Luhn)', () => {
+  test.describe('@p4 FR-CHK-008: Valid Card Number Validation (Luhn)', () => {
     test('Login with Standard User - invalid card number shows error', async ({
       loginPage,
       catalogPage,
@@ -164,7 +173,7 @@ test.describe('Checkout Module', () => {
 
       await test.step('Add a product to cart', async () => {
         await catalogPage.goto();
-        await addProductToCart(page);
+        await addProductToCart(page, expect);
       });
 
       await test.step('Navigate to checkout via cart', async () => {
@@ -209,27 +218,34 @@ test.describe('Checkout Module', () => {
     });
   });
 
-  test.describe('FR-CHK-009: Successful Order Placement', () => {
+  test.describe('@p1 @e2e FR-CHK-009: Successful Order Placement', () => {
     test('Login with Standard User - valid checkout creates order', async ({
       loginPage,
       catalogPage,
       cartPage,
       checkoutPage,
+      navBar,
       page,
     }) => {
       await test.step('Navigate to login page and login', async () => {
         await loginPage.goto();
         await loginPage.login(STANDARD_USER.username, STANDARD_USER.password);
+        // Verify login was successful
+        await expect(page).toHaveURL(/catalog/);
+        await expect(navBar.logoutButton).toBeVisible({ timeout: 10000 });
       });
 
       await test.step('Add a product to cart', async () => {
-        await catalogPage.goto();
-        await addProductToCart(page);
+        // Wait for catalog page to be fully loaded
+        await catalogPage.productCards.first().waitFor({ state: 'visible', timeout: 10000 });
+        await addProductToCart(page, expect);
       });
 
       await test.step('Navigate to checkout via cart', async () => {
         await cartPage.gotoViaNavbar();
         await cartPage.waitForCartItems();
+        // Verify still authenticated before proceeding
+        await expect(navBar.logoutButton).toBeVisible({ timeout: 5000 });
         await cartPage.clickProceedToCheckout();
       });
 
@@ -240,17 +256,14 @@ test.describe('Checkout Module', () => {
         );
       });
 
-      await test.step('Click Place Order', async () => {
+      await test.step('Click Place Order and verify redirect', async () => {
         await checkoutPage.clickPlaceOrder();
-      });
-
-      await test.step('Verify redirected to order confirmation page', async () => {
         await expect(page).toHaveURL(/orders\/\d+/);
       });
     });
   });
 
-  test.describe('FR-CHK-010: Test Card Number', () => {
+  test.describe('@p3 FR-CHK-010: Test Card Number', () => {
     test('Login with Standard User - test card number 4242424242424242 works', async ({
       loginPage,
       catalogPage,
@@ -266,7 +279,7 @@ test.describe('Checkout Module', () => {
 
       await test.step('Add a product to cart', async () => {
         await catalogPage.goto();
-        await addProductToCart(page);
+        await addProductToCart(page, expect);
       });
 
       await test.step('Navigate to checkout via cart', async () => {

@@ -23,11 +23,24 @@ export class CatalogPage {
   }
 
   /**
-   * Navigate to the catalog page and wait for products to load
+   * Navigate to the catalog page via full page load
+   * WARNING: This resets client-side cart state! Use gotoViaNavbar() when cart has items
    */
   async goto(): Promise<void> {
     await this.page.goto('/catalog');
     // Wait for the page heading to be visible, indicating content has loaded
+    await this.pageHeading.waitFor({ state: 'visible', timeout: 10000 });
+    // Wait for at least one product card to be visible
+    await this.productCards.first().waitFor({ state: 'visible', timeout: 10000 });
+  }
+
+  /**
+   * Navigate to catalog by clicking the Products link in the navbar
+   * This preserves client-side state (cart items added in current session)
+   */
+  async gotoViaNavbar(): Promise<void> {
+    await this.page.getByRole('navigation').getByRole('link', { name: 'Products' }).click();
+    // Wait for the page heading to be visible
     await this.pageHeading.waitFor({ state: 'visible', timeout: 10000 });
     // Wait for at least one product card to be visible
     await this.productCards.first().waitFor({ state: 'visible', timeout: 10000 });

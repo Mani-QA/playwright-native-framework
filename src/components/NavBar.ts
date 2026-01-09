@@ -35,8 +35,8 @@ export class NavBar {
     // Authentication - Logged in state
     // Username link goes to /orders - find it in the navigation
     this.usernameLink = page.getByRole('navigation').locator('a[href="/orders"]');
-    // Use exact: true to avoid matching "admin_user" username
-    this.adminButton = page.getByRole('link', { name: 'Admin', exact: true });
+    // Admin link in navigation - the link contains text "Admin" and has href="/admin"
+    this.adminButton = page.getByRole('navigation').locator('a[href="/admin"]');
     // Logout button is an icon-only button in the navigation (the one that's not the Admin button)
     this.logoutButton = page.getByRole('navigation').getByRole('button').last();
 

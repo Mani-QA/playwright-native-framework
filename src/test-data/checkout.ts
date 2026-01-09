@@ -36,7 +36,7 @@ export const VALID_SHIPPING: ShippingInfo = {
  */
 export const VALID_PAYMENT: PaymentInfo = {
   cardNumber: '4242424242424242',
-  expiryDate: '1226',
+  expiryDate: '12/26',
   cvv: '123',
   cardholderName: 'John Doe',
 };
@@ -54,7 +54,7 @@ export const VALID_CHECKOUT_DATA: CheckoutData = {
  */
 export const INVALID_CARD_NUMBER: PaymentInfo = {
   cardNumber: '1234567890123456',
-  expiryDate: '1226',
+  expiryDate: '12/26',
   cvv: '123',
   cardholderName: 'John Doe',
 };
@@ -64,7 +64,7 @@ export const INVALID_CARD_NUMBER: PaymentInfo = {
  */
 export const EXPIRED_CARD: PaymentInfo = {
   cardNumber: '4242424242424242',
-  expiryDate: '0120', // January 2020 - expired
+  expiryDate: '01/20', // January 2020 - expired
   cvv: '123',
   cardholderName: 'John Doe',
 };

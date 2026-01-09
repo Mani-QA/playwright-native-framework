@@ -2,7 +2,7 @@ import { test, expect } from '../src/fixtures/pomFixtures';
 import { STANDARD_USER, ADMIN_USER, ORDER_STATUSES } from '../src/test-data';
 
 test.describe('Admin Dashboard Module', () => {
-  test.describe('FR-ADM-001: Admin Access Control', () => {
+  test.describe('@p2 FR-ADM-001: Admin Access Control', () => {
     test('Login with Standard User - cannot access admin dashboard', async ({
       loginPage,
       adminPage,
@@ -24,7 +24,7 @@ test.describe('Admin Dashboard Module', () => {
     });
   });
 
-  test.describe('FR-ADM-002: Admin Link Visibility', () => {
+  test.describe('@p3 FR-ADM-002: Admin Link Visibility', () => {
     test('Login with Standard User - admin link not visible', async ({ loginPage, navBar }) => {
       await test.step('Navigate to login page and login as standard user', async () => {
         await loginPage.goto();
@@ -48,7 +48,7 @@ test.describe('Admin Dashboard Module', () => {
     });
   });
 
-  test.describe('FR-ADM-003: Dashboard Tabs', () => {
+  test.describe('@p3 FR-ADM-003: Dashboard Tabs', () => {
     test('Login with Admin User - dashboard has Overview, Products, and Orders tabs', async ({
       loginPage,
       adminPage,
@@ -70,7 +70,7 @@ test.describe('Admin Dashboard Module', () => {
     });
   });
 
-  test.describe('FR-ADM-004: Overview Tab - Statistics', () => {
+  test.describe('@p4 FR-ADM-004: Overview Tab - Statistics', () => {
     test('Login with Admin User - overview tab displays key metrics', async ({
       loginPage,
       adminPage,
@@ -96,7 +96,7 @@ test.describe('Admin Dashboard Module', () => {
     });
   });
 
-  test.describe('FR-ADM-005: Overview Tab - Low Stock Alert', () => {
+  test.describe('@p4 FR-ADM-005: Overview Tab - Low Stock Alert', () => {
     // Skip this test - the current application doesn't have a Low Stock section on the admin dashboard
     test.skip('Login with Admin User - shows products with low stock', async ({
       loginPage,
@@ -121,7 +121,7 @@ test.describe('Admin Dashboard Module', () => {
     });
   });
 
-  test.describe('FR-ADM-006: Overview Tab - Recent Orders', () => {
+  test.describe('@p4 FR-ADM-006: Overview Tab - Recent Orders', () => {
     test('Login with Admin User - shows recent orders', async ({ loginPage, adminPage }) => {
       await test.step('Navigate to login page and login as admin user', async () => {
         await loginPage.goto();
@@ -142,7 +142,7 @@ test.describe('Admin Dashboard Module', () => {
     });
   });
 
-  test.describe('FR-ADM-007: Product Inventory Table', () => {
+  test.describe('@p4 FR-ADM-007: Product Inventory Table', () => {
     test('Login with Admin User - products tab shows all products', async ({
       loginPage,
       adminPage,
@@ -171,7 +171,7 @@ test.describe('Admin Dashboard Module', () => {
     });
   });
 
-  test.describe('FR-ADM-009: Add New Product', () => {
+  test.describe('@p4 FR-ADM-009: Add New Product', () => {
     // Skip this test - the current application doesn't have an Add Product feature
     test.skip('Login with Admin User - can open add product modal', async ({
       loginPage,
@@ -207,7 +207,7 @@ test.describe('Admin Dashboard Module', () => {
     });
   });
 
-  test.describe('FR-ADM-013: Order History Table', () => {
+  test.describe('@p4 FR-ADM-013: Order History Table', () => {
     test('Login with Admin User - orders tab shows all orders', async ({
       loginPage,
       adminPage,

@@ -25,10 +25,8 @@ export class LoginPage {
     // Scope to main content to avoid navbar's Sign In button
     this.signInButton = page.getByRole('main').getByRole('button', { name: 'Sign In' });
 
-    // Error message - check for alert role or common error text patterns
-    this.errorMessage = page.getByRole('alert').or(
-      page.getByText(/error|invalid|locked|failed/i).first()
-    );
+    // Error message - use the alert role (contains the error message paragraph)
+    this.errorMessage = page.getByRole('alert');
 
     // Navigation
     this.backToHomeLink = page.getByRole('link', { name: 'Back to Home' });

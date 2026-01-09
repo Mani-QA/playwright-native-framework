@@ -5,6 +5,12 @@
   "main": "index.js",
   "scripts": {
     "test": "npx playwright test",
+    "test:all": "npx playwright test --grep=\"@p1|@p2|@p3|@p4\"",
+    "test:p1": "npx playwright test --grep=\"@p1\"",
+    "test:p2": "npx playwright test --grep=\"@p2\"",
+    "test:p1p2": "npx playwright test --grep=\"@p1|@p2\"",
+    "test:p3": "npx playwright test --grep=\"@p3\"",
+    "test:p4": "npx playwright test --grep=\"@p4\"",
     "test:ui": "npx playwright test --ui",
     "test:headed": "npx playwright test --headed",
     "test:debug": "npx playwright test --debug",

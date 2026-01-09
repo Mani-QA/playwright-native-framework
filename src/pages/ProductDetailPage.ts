@@ -48,6 +48,16 @@ export class ProductDetailPage {
    * Add the product to cart
    */
   async addToCart(): Promise<void> {
+    await this.addToCartButton.waitFor({ state: 'visible', timeout: 10000 });
+    // Wait for button to be enabled (not in loading state)
+    await this.page.waitForFunction(
+      (selector) => {
+        const btn = document.querySelector(selector);
+        return btn && !btn.hasAttribute('disabled');
+      },
+      'button[aria-label*="Add"][aria-label*="to cart"]',
+      { timeout: 15000 }
+    );
     await this.addToCartButton.click();
   }
 

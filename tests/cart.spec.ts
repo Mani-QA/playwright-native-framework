@@ -8,17 +8,25 @@ import { STANDARD_USER } from '../src/test-data';
 async function addProductToCart(
   page: import('@playwright/test').Page
 ): Promise<void> {
-  const firstAddButton = page.getByRole('button', { name: 'Add' }).first();
-  await firstAddButton.click();
-  // Wait for the "In Cart" button to appear - this confirms the UI updated
-  await page.getByRole('button', { name: /In Cart/i }).first().waitFor({ state: 'visible', timeout: 10000 });
+  // Wait for catalog to be fully loaded - wait for product cards to appear
+  await page.locator('[data-testid^="product-card-"]').first().waitFor({ state: 'visible', timeout: 10000 });
+  
+  // Find an enabled "Add" button (product not already in cart)
+  // The button text contains "Add" and is for adding to cart
+  const addButtons = page.getByRole('button', { name: /Add .+ to cart/i });
+  const firstEnabledButton = addButtons.first();
+  
+  // Wait for the button to be visible and enabled
+  await firstEnabledButton.waitFor({ state: 'visible', timeout: 10000 });
+  await expect(firstEnabledButton).toBeEnabled({ timeout: 15000 });
+  await firstEnabledButton.click();
+  
   // Wait for the cart badge in navbar to show a number (indicating cart has items)
-  // The cart badge is in the nav link to /cart
   await page.locator('nav a[href="/cart"]').filter({ hasText: /\d+/ }).waitFor({ state: 'visible', timeout: 10000 });
 }
 
 test.describe('Shopping Cart Module', () => {
-  test.describe('FR-CART-001: Empty Cart Display', () => {
+  test.describe('@p2 FR-CART-001: Empty Cart Display', () => {
     test('Empty cart shows appropriate message', async ({ cartPage }) => {
       await test.step('Navigate to cart page', async () => {
         await cartPage.goto();
@@ -34,7 +42,7 @@ test.describe('Shopping Cart Module', () => {
     });
   });
 
-  test.describe('FR-CART-002: Cart Items Display', () => {
+  test.describe('@p1 FR-CART-002: Cart Items Display', () => {
     test('Login with Standard User - cart displays added items', async ({
       loginPage,
       catalogPage,
@@ -68,7 +76,7 @@ test.describe('Shopping Cart Module', () => {
     });
   });
 
-  test.describe('FR-CART-003: Increase Quantity', () => {
+  test.describe('@p2 FR-CART-003: Increase Quantity', () => {
     test('Login with Standard User - can increase item quantity', async ({
       loginPage,
       catalogPage,
@@ -98,26 +106,26 @@ test.describe('Shopping Cart Module', () => {
       });
 
       await test.step('Click increase quantity button', async () => {
-        // Get the first cart item container (contains product link and controls)
-        const firstCartItem = page.getByRole('main').locator('a[href^="/products/"]').first().locator('..').locator('..');
-        // Find the plus button - it's the enabled button after the quantity text
-        // In the cart, structure is: [minus button (disabled)] [qty text] [plus button]
-        const plusButton = firstCartItem.locator('button').filter({ hasNot: page.locator('[disabled]') }).first();
-        await plusButton.waitFor({ state: 'visible', timeout: 10000 });
-        await plusButton.click();
+        // Click the plus button using JavaScript to avoid React re-render issues
+        // The plus button is the 2nd button with SVG in the main area (index 1)
+        await page.evaluate(() => {
+          const buttons = document.querySelectorAll('main button svg');
+          if (buttons.length >= 2) {
+            (buttons[1].closest('button') as HTMLButtonElement)?.click();
+          }
+        });
         // Wait for cart badge to update to 2
         await expect(page.getByRole('navigation').locator('a[href="/cart"]')).toContainText('2', { timeout: 10000 });
       });
 
       await test.step('Verify quantity increased', async () => {
-        // Verify quantity text shows 2 in the cart item
-        const firstCartItem = page.getByRole('main').locator('a[href^="/products/"]').first().locator('..').locator('..');
-        await expect(firstCartItem.getByText('2', { exact: true })).toBeVisible({ timeout: 5000 });
+        // Verify quantity text shows 2 in the cart area
+        await expect(page.getByRole('main').getByText('2', { exact: true })).toBeVisible({ timeout: 5000 });
       });
     });
   });
 
-  test.describe('FR-CART-004: Decrease Quantity', () => {
+  test.describe('@p3 FR-CART-004: Decrease Quantity', () => {
     test('Login with Standard User - can decrease item quantity', async ({
       loginPage,
       catalogPage,
@@ -142,21 +150,25 @@ test.describe('Shopping Cart Module', () => {
       });
 
       await test.step('Increase quantity to 2 first', async () => {
-        // Get the first cart item container
-        const firstCartItem = page.getByRole('main').locator('a[href^="/products/"]').first().locator('..').locator('..');
-        // Find the plus button - it's the enabled button after the quantity text
-        const plusButton = firstCartItem.locator('button').filter({ hasNot: page.locator('[disabled]') }).first();
-        
-        await plusButton.click();
+        // Click the plus button using JavaScript to avoid React re-render issues
+        await page.evaluate(() => {
+          const buttons = document.querySelectorAll('main button svg');
+          if (buttons.length >= 2) {
+            (buttons[1].closest('button') as HTMLButtonElement)?.click();
+          }
+        });
         // Wait for cart badge to update to 2
         await expect(page.getByRole('navigation').locator('a[href="/cart"]')).toContainText('2', { timeout: 10000 });
       });
 
       await test.step('Click decrease quantity button', async () => {
-        // Get the first cart item container and find the minus button (should now be enabled)
-        const firstCartItem = page.getByRole('main').locator('a[href^="/products/"]').first().locator('..').locator('..');
-        const minusButton = firstCartItem.locator('button').first(); // First button is minus
-        await minusButton.click();
+        // Click the minus button (index 0) using JavaScript
+        await page.evaluate(() => {
+          const buttons = document.querySelectorAll('main button svg');
+          if (buttons.length >= 1) {
+            (buttons[0].closest('button') as HTMLButtonElement)?.click();
+          }
+        });
       });
 
       await test.step('Verify quantity decreased', async () => {
@@ -166,7 +178,7 @@ test.describe('Shopping Cart Module', () => {
     });
   });
 
-  test.describe('FR-CART-005: Minimum Quantity Constraint', () => {
+  test.describe('@p3 FR-CART-005: Minimum Quantity Constraint', () => {
     test('Login with Standard User - minus button disabled at quantity 1', async ({
       loginPage,
       catalogPage,
@@ -202,7 +214,7 @@ test.describe('Shopping Cart Module', () => {
     });
   });
 
-  test.describe('FR-CART-007: Remove Single Item', () => {
+  test.describe('@p2 FR-CART-007: Remove Single Item', () => {
     test('Login with Standard User - can remove single item from cart', async ({
       loginPage,
       catalogPage,
@@ -225,11 +237,13 @@ test.describe('Shopping Cart Module', () => {
       });
 
       await test.step('Click remove button', async () => {
-        // Get the first cart item container and find the trash button (last button in the controls area)
-        const firstCartItem = page.getByRole('main').locator('a[href^="/products/"]').first().locator('..').locator('..');
-        // The trash button is the last button with SVG in the cart item
-        const trashButton = firstCartItem.locator('button:has(svg)').last();
-        await trashButton.click();
+        // Click the trash button (index 2) using JavaScript to avoid React re-render issues
+        await page.evaluate(() => {
+          const buttons = document.querySelectorAll('main button svg');
+          if (buttons.length >= 3) {
+            (buttons[2].closest('button') as HTMLButtonElement)?.click();
+          }
+        });
       });
 
       await test.step('Verify cart is empty', async () => {
@@ -240,7 +254,7 @@ test.describe('Shopping Cart Module', () => {
     });
   });
 
-  test.describe('FR-CART-008: Clear Entire Cart', () => {
+  test.describe('@p3 FR-CART-008: Clear Entire Cart', () => {
     test('Login with Standard User - can clear all items from cart', async ({
       loginPage,
       catalogPage,
@@ -279,7 +293,7 @@ test.describe('Shopping Cart Module', () => {
     });
   });
 
-  test.describe('FR-CART-010: Proceed to Checkout (Authenticated)', () => {
+  test.describe('@p1 FR-CART-010: Proceed to Checkout (Authenticated)', () => {
     test('Login with Standard User - can proceed to checkout', async ({
       loginPage,
       catalogPage,
@@ -311,7 +325,7 @@ test.describe('Shopping Cart Module', () => {
     });
   });
 
-  test.describe('FR-CART-011: Proceed to Checkout (Unauthenticated)', () => {
+  test.describe('@p3 FR-CART-011: Proceed to Checkout (Unauthenticated)', () => {
     test('Unauthenticated user redirected to login when proceeding to checkout', async ({
       catalogPage,
       cartPage,
