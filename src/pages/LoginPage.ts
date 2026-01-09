@@ -73,11 +73,11 @@ export class LoginPage {
     await this.fillUsername(username);
     await this.fillPassword(password);
     await this.clickSignIn();
-    // Wait for successful login navigation (redirect away from login page)
-    // or for an error message to appear
-    await this.page.waitForURL(url => !url.toString().includes('/login'), { timeout: 10000 }).catch(() => {
-      // If we didn't navigate, an error message should be displayed
-    });
+    // Wait for navigation away from login page OR error message to appear
+    await Promise.race([
+      this.page.waitForURL(url => !url.toString().includes('/login'), { timeout: 15000 }),
+      this.errorMessage.waitFor({ state: 'visible', timeout: 15000 })
+    ]);
   }
 
   /**
