@@ -48,17 +48,32 @@ export class ProductDetailPage {
    * Add the product to cart
    */
   async addToCart(): Promise<void> {
-    await this.addToCartButton.waitFor({ state: 'visible', timeout: 10000 });
-    // Wait for button to be enabled (not in loading state)
+    // Wait for the page to fully load and button to be visible
+    await this.page.waitForLoadState('domcontentloaded');
+    
+    // Use a more flexible locator that matches buttons containing "Add" text
+    const addButton = this.page.locator('button').filter({ hasText: /Add to Cart|^Add$/i }).first();
+    
+    // Wait for button to be visible and enabled
+    await addButton.waitFor({ state: 'visible', timeout: 15000 });
+    await addButton.waitFor({ state: 'attached', timeout: 5000 });
+    
+    // Ensure button is enabled before clicking
     await this.page.waitForFunction(
-      (selector) => {
-        const btn = document.querySelector(selector);
-        return btn && !btn.hasAttribute('disabled');
+      () => {
+        const buttons = document.querySelectorAll('button');
+        for (const btn of buttons) {
+          const text = btn.textContent?.toLowerCase() || '';
+          if (text.includes('add to cart') || text.match(/^add$/)) {
+            return !btn.hasAttribute('disabled') && !btn.classList.contains('disabled');
+          }
+        }
+        return false;
       },
-      'button[aria-label*="Add"][aria-label*="to cart"]',
-      { timeout: 15000 }
+      { timeout: 10000 }
     );
-    await this.addToCartButton.click();
+    
+    await addButton.click();
   }
 
   /**
