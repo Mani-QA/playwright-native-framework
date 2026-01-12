@@ -98,7 +98,7 @@ The QADemo API uses **JWT (JSON Web Tokens)** for authentication. All protected 
       "id": 2,
       "username": "standard_user",
       "email": "user@example.com",
-      "userType": "customer"
+      "userType": "standard"
     },
     "accessToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
     "refreshToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."

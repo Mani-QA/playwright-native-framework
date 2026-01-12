@@ -362,7 +362,7 @@ test.describe('API Testing - E2E Order Flow with Admin Operations', () => {
 
         // Verify stock is a valid number
         expect(typeof currentStock).toBe('number');
-        expect(currentStock).toBeGreaterThanOrEqual(0);
+        expect(currentStock).toBe(100);
 
         // Note: Stock updates might be cached or processed asynchronously
         // Verify the admin API confirmed the update
