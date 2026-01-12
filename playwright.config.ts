@@ -17,8 +17,9 @@ export default defineConfig({
   // By default, run tests matching these patterns:
   // - @p1, @p2: Priority 1 and 2 tests  
   // - @agent: Agent exploration/seed tests
+  // - @API: API tests
   // Use --grep="@p3|@p4" to run lower priority tests
-  grep: /@p1|@p2|@agent/,
+  grep: /@p1|@p2|@agent|@API/,
 
   // Retry on CI only
   retries: process.env.CI ? 2 : 0,

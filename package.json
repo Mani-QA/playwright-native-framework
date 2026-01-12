@@ -20,6 +20,7 @@
     "test:checkout": "npx playwright test tests/checkout.spec.ts",
     "test:orders": "npx playwright test tests/orders.spec.ts",
     "test:admin": "npx playwright test tests/admin.spec.ts",
+    "test:api": "npx playwright test tests/api.spec.ts",
     "report": "npx playwright show-report",
     "codegen": "npx playwright codegen https://qademo.com",
     "lint": "eslint src tests --ext .ts",

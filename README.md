@@ -124,7 +124,8 @@ playwright/
 │   ├── checkout.spec.ts     # Checkout flow tests
 │   ├── orders.spec.ts       # Order management tests
 │   ├── admin.spec.ts        # Admin dashboard tests
-│   └── navigation.spec.ts   # Navigation/layout tests
+│   ├── navigation.spec.ts   # Navigation/layout tests
+│   └── api.spec.ts          # REST API tests
 │
 ├── playwright.config.ts     # Playwright configuration
 ├── tsconfig.json            # TypeScript configuration
@@ -378,6 +379,7 @@ export const VALID_CHECKOUT_DATA = {
 | `npm run test:checkout` | Run checkout tests only |
 | `npm run test:orders` | Run order tests only |
 | `npm run test:admin` | Run admin tests only |
+| `npm run test:api` | Run API tests only |
 | `npm run report` | Open HTML test report |
 | `npm run codegen` | Launch Playwright codegen |
 
@@ -405,6 +407,169 @@ npm test -- tests/auth.spec.ts
 
 # Run specific test
 npm test -- --grep "should redirect to catalog"
+
+# Run by tag
+npm test -- --grep "@p1"      # Priority 1 tests only
+npm test -- --grep "@API"     # API tests only
+```
+
+### API Testing 🚀
+
+The framework includes comprehensive REST API testing capabilities using Playwright's native `request` context. All 11 API tests validate the complete E2E order flow and admin operations with 100% pass rate.
+
+#### Test Coverage
+
+**Standard User Flow (@API @p1):**
+1. ✅ Login as Standard User and save access token
+2. ✅ Check availability of Product 1
+3. ✅ Add Product 1 to Cart
+4. ✅ Increase quantity to 2
+5. ✅ Place Order
+6. ✅ Check availability after order (stock reduced by 2)
+7. ✅ Check Order Status
+
+**Admin Operations (@API @p2):**
+8. ✅ Login as Admin User
+9. ✅ Update Order status to processing
+10. ✅ Update Product 1 stock to 100
+11. ✅ Verify stock is updated to 100
+
+#### Key Features
+
+- ✅ **Bearer Token Authentication** - Uses JWT tokens (NOT Base64 Basic Auth)
+- ✅ **Serial Execution** - Tests run sequentially to maintain shared state
+- ✅ **Comprehensive Validations** - HTTP status, response structure, business logic
+- ✅ **State Management** - Shared tokens, session ID, order ID across tests
+- ✅ **CI/CD Ready** - Auto-included in default test runs
+
+#### API Endpoints Tested
+
+**Authentication:** `POST /api/auth/login`  
+**Public:** `GET /api/products/id/:id`  
+**Cart:** `POST /api/cart/items`, `PATCH /api/cart/items/:id`, `GET /api/cart`  
+**Orders:** `POST /api/orders`, `GET /api/orders/:id`  
+**Admin:** `PATCH /api/admin/orders/:id/status`, `PATCH /api/admin/products/:id/stock`, `GET /api/admin/products`
+
+#### Running API Tests
+
+```bash
+# Run all API tests (11 tests, ~14 seconds)
+npm run test:api
+
+# Run with @API tag
+npm test -- --grep="@API"
+
+# Run by priority
+npm test -- --grep="@API.*@p1"  # Standard user flow (7 tests)
+npm test -- --grep="@API.*@p2"  # Admin operations (4 tests)
+
+# View report
+npm run report
+```
+
+#### Test Structure Example
+
+```typescript
+test.describe.configure({ mode: 'serial' });
+
+test.describe('API Testing - E2E Order Flow', () => {
+  const baseURL = 'https://qademo.com/api';
+  let standardUserToken: string;
+  let sessionId: string;
+  let orderId: number;
+
+  test.beforeAll(() => {
+    sessionId = randomUUID();
+  });
+
+  test('Login as Standard User', async ({ request }) => {
+    await test.step('Login with standard user credentials', async () => {
+      const loginResponse = await request.post(`${baseURL}/auth/login`, {
+        data: {
+          username: STANDARD_USER.username,
+          password: STANDARD_USER.password,
+        },
+      });
+      
+      expect(loginResponse.ok()).toBeTruthy();
+      expect(loginResponse.status()).toBe(200);
+      
+      const responseBody = await loginResponse.json();
+      expect(responseBody.success).toBe(true);
+      expect(responseBody.data).toHaveProperty('accessToken');
+      
+      standardUserToken = responseBody.data.accessToken;
+    });
+  });
+  
+  test('Place Order', async ({ request }) => {
+    await test.step('Create order with cart items', async () => {
+      const orderResponse = await request.post(`${baseURL}/orders`, {
+        headers: {
+          'Authorization': `Bearer ${standardUserToken}`,
+          'X-Session-ID': sessionId,
+          'Content-Type': 'application/json',
+        },
+        data: {
+          shipping: { /* ... */ },
+          payment: { /* ... */ }
+        },
+      });
+      
+      expect(orderResponse.status()).toBe(201);
+      const responseBody = await orderResponse.json();
+      orderId = responseBody.data.id;
+    });
+  });
+});
+```
+
+#### Validation Examples
+
+```typescript
+// Login validation
+expect(loginResponse.ok()).toBeTruthy();
+expect(loginResponse.status()).toBe(200);
+expect(responseBody.data.user.userType).toBe('standard');
+
+// Product availability
+expect(responseBody.data.stock).toBeGreaterThanOrEqual(0);
+expect(responseBody.data).toHaveProperty('isActive');
+
+// Order creation
+expect(orderResponse.status()).toBe(201);
+expect(responseBody.data.status).toBe('pending');
+expect(responseBody.data).toHaveProperty('id');
+
+// Admin operations
+expect(updateStatusResponse.ok()).toBeTruthy();
+expect(responseBody.data.status).toBe('processing');
+```
+
+#### Important Notes
+
+- **Authentication:** Tests use JWT Bearer tokens from login API (not hardcoded credentials)
+- **Session Management:** Unique UUID session ID per test run for cart operations
+- **Stock Updates:** May be asynchronous; admin API provides real-time data
+- **Serial Mode:** Required for maintaining shared state (tokens, order ID)
+- **Test Data:** Uses Product ID 1, test card 4242424242424242
+
+#### Test Results
+
+Latest execution: **11 passed (12-14s) • 100% pass rate**
+
+```
+✓ Login as Standard User and save access token (1.0s)
+✓ Check availability of Product 1 (71ms)
+✓ Add Product 1 to Cart (1.5s)
+✓ Increase quantity to 2 (971ms)
+✓ Place Order (1.7s)
+✓ Check availability after order (1.1s)
+✓ Check Order Status (636ms)
+✓ Login as Admin User (654ms)
+✓ Update Order status to processing (1.0s)
+✓ Update Product stock to 100 (526ms)
+✓ Verify stock is updated (1.3s)
 ```
 
 ---
