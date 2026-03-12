@@ -1,6 +1,6 @@
 # QADemo Playwright Automation Framework
 
-A production-ready, enterprise-grade Playwright automation framework for the [QADemo](https://qademo.com) e-commerce application. Built with TypeScript, this framework demonstrates modern test automation best practices using the Page Object Model (POM) pattern with dependency injection via custom fixtures.
+A production-ready, enterprise-grade Playwright native automation framework for the [QADemo](https://qademo.com) e-commerce application. Built with TypeScript, this framework demonstrates modern test automation best practices using the Page Object Model (POM) pattern with dependency injection via custom fixtures.
 
 ## Table of Contents
 
