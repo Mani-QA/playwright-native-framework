@@ -1,6 +1,8 @@
 # QADemo Playwright Automation Framework
 
-A production-ready, enterprise-grade Playwright native automation framework for the [QADemo](https://qademo.com) e-commerce application. Built with TypeScript, this framework demonstrates modern test automation best practices using the Page Object Model (POM) pattern with dependency injection via custom fixtures.
+A production-ready Playwright native automation framework for the [QADemo](https://qademo.com) e-commerce application. It is written in TypeScript and uses the Page Object Model with fixtures.
+
+The suite covers signup and login, shopping, admin, the REST API, and the store's [WebMCP](https://playwright.dev/docs/api/class-webmcp) tools. Playwright results, including failure screenshots, are published to the existing [Qase run](https://app.qase.io/run/QADEMO/dashboard/1).
 
 ## Table of Contents
 
@@ -13,8 +15,10 @@ A production-ready, enterprise-grade Playwright native automation framework for 
   - [Custom Fixtures](#custom-fixtures)
   - [Locator Strategy](#locator-strategy)
   - [Test Steps](#test-steps)
-- [Test Data Management](#test-data-management)
+- [Accounts and Test Data](#accounts-and-test-data)
 - [Running Tests](#running-tests)
+- [Qase Test Management](#qase-test-management)
+- [WebMCP Tests](#webmcp-tests)
 - [CI/CD Integration](#cicd-integration)
 - [Playwright Test Agents](#playwright-test-agents)
 - [Best Practices](#best-practices)
@@ -32,8 +36,10 @@ This framework was built following strict automation standards to ensure:
 | **Reliability** | Web-first assertions with auto-retry; no flaky `waitForTimeout()` |
 | **Readability** | `test.step()` blocks create meaningful test reports |
 | **Scalability** | Fixture-based dependency injection for clean test composition |
-| **Cross-browser** | Multi-browser support (Chromium, Firefox, WebKit, Mobile) |
-| **CI/CD Ready** | GitHub Actions workflows with sharding support |
+| **Shared customer** | Global setup signs up one shopper that cart, checkout, orders, and API tests reuse |
+| **Qase** | Spec cases live in QADemo Automation and results stack on one run |
+| **WebMCP** | Chromium calls the store tools the page registers for agents |
+| **CI/CD Ready** | Four GitHub Actions shards, one HTML report, and a Qase link |
 
 ### What Makes This Different?
 
@@ -79,26 +85,35 @@ This framework was built following strict automation standards to ensure:
                               ▼
 ┌─────────────────────────────────────────────────────────────────┐
 │                     Test Data                                   │
-│  (users.ts, checkout.ts - Centralized Test Data)                │
+│  (signed-up customer, seeded users, checkout data)              │
+└─────────────────────────────────────────────────────────────────┘
+                              │
+                              ▼
+┌─────────────────────────────────────────────────────────────────┐
+│              Global setup and Qase                              │
+│  Create the shared customer, then download the Qase case map   │
 └─────────────────────────────────────────────────────────────────┘
 ```
+
+Global setup runs before any project. It creates the shared customer, then downloads the Qase case map when a token is present. Each spec imports `test` from `pomFixtures`, which links the test to that case. WebMCP tests call `page.webmcp` on the same Chromium browser the rest of the suite uses.
 
 ---
 
 ## Project Structure
 
 ```
-playwright/
+playwright-native-framework/
 ├── src/
 │   ├── components/          # Reusable UI components (NavBar, Footer)
 │   │   ├── NavBar.ts
 │   │   └── Footer.ts
 │   │
 │   ├── fixtures/            # Custom Playwright fixtures
-│   │   └── pomFixtures.ts   # Page Object injection
+│   │   └── pomFixtures.ts   # Page objects and the Qase case link
 │   │
 │   ├── pages/               # Page Object Models
 │   │   ├── LoginPage.ts
+│   │   ├── SignupPage.ts
 │   │   ├── HomePage.ts
 │   │   ├── CatalogPage.ts
 │   │   ├── ProductDetailPage.ts
@@ -108,29 +123,40 @@ playwright/
 │   │   ├── OrderDetailPage.ts
 │   │   └── AdminPage.ts
 │   │
+│   ├── qase/                # Token loading and the case-id map
+│   │   ├── token.ts
+│   │   └── sync-case-map.ts
+│   │
 │   ├── test-data/           # Test data and fixtures
-│   │   ├── users.ts         # User credentials
+│   │   ├── users.ts         # Seeded login accounts
+│   │   ├── signedUpUser.ts  # Shared customer created at startup
 │   │   ├── checkout.ts      # Checkout form data
 │   │   └── index.ts         # Barrel export
 │   │
 │   └── utils/               # Helper utilities
-│       └── helpers.ts
+│       ├── helpers.ts
+│       └── webmcp.ts        # Store WebMCP tool calls
 │
 ├── tests/                   # Test specifications
-│   ├── auth.setup.ts        # Authentication setup (storage state)
-│   ├── auth.spec.ts         # Authentication tests
+│   ├── auth.setup.ts        # Customer and admin sign-in
+│   ├── auth.spec.ts         # Login and signup tests
 │   ├── catalog.spec.ts      # Product catalog tests
 │   ├── cart.spec.ts         # Shopping cart tests
 │   ├── checkout.spec.ts     # Checkout flow tests
 │   ├── orders.spec.ts       # Order management tests
 │   ├── admin.spec.ts        # Admin dashboard tests
-│   ├── navigation.spec.ts   # Navigation/layout tests
+│   ├── navigation.spec.ts   # Navigation and layout tests
 │   ├── api.spec.ts          # REST API tests
-│   └── webmcp.spec.ts       # WebMCP store-tool tests
+│   ├── webmcp.spec.ts       # WebMCP store-tool tests
+│   └── seed.spec.ts         # Agent exploration seed
 │
-├── playwright.config.ts     # Playwright configuration
-├── tsconfig.json            # TypeScript configuration
-└── package.json             # Dependencies and scripts
+├── docs/
+│   └── skills/adding-qademo-tests/   # How to add a spec and publish it to Qase
+├── global-setup.ts          # Shared customer and Qase case map
+├── playwright.config.ts     # Projects, reporters, WebMCP launch flag
+├── eslint.config.mjs        # ESLint flat config
+├── tsconfig.json
+└── package.json
 ```
 
 ---
@@ -139,22 +165,22 @@ playwright/
 
 ### Prerequisites
 
-- Node.js 18+ 
-- npm or yarn
+- Node.js 22.13 or newer. GitHub Actions installs Node.js 24.
+- npm
+
+Playwright 1.64 runs on Node.js 20 or newer. ESLint 10 needs Node.js 20.19, 22.13, or 24 and above, so 22.13 is the practical local minimum.
 
 ### Installation
 
 ```bash
-# Clone the repository
-git clone https://github.com/your-org/playwright-native-framework.git
+git clone https://github.com/Mani-QA/playwright-native-framework.git
 cd playwright-native-framework
 
-# Install dependencies
 npm install
-
-# Install Playwright browsers
-npx playwright install
+npx playwright install chromium
 ```
+
+To publish results locally, add `QASEToken` to a `.env` file in this directory or in the parent directory. The token is read at startup and is never printed. See [Qase Test Management](#qase-test-management).
 
 ### Quick Start
 
@@ -197,9 +223,9 @@ export class LoginPage {
   constructor(page: Page) {
     this.page = page;
     // User-facing locators for reliability
-    this.usernameInput = page.getByLabel('Username');
-    this.passwordInput = page.getByLabel('Password');
-    this.signInButton = page.getByRole('main').getByRole('button', { name: 'Sign In' });
+    this.usernameInput = page.getByRole('textbox', { name: 'Username or email' });
+    this.passwordInput = page.getByRole('textbox', { name: 'Password', exact: true });
+    this.signInButton = page.getByRole('main').getByRole('button', { name: /^Sign in$/i });
     this.errorMessage = page.getByRole('alert');
   }
 
@@ -321,44 +347,39 @@ test('complete checkout flow', async ({ catalogPage, cartPage, checkoutPage }) =
 
 ---
 
-## Test Data Management
+## Accounts and Test Data
 
-### User Credentials (`src/test-data/users.ts`)
+Call `loadSignedUpUser()` inside a test or step. Reading it at import time fails, because global setup has not written the file yet.
 
-```typescript
-export const STANDARD_USER = {
-  username: 'standard_user',
-  password: 'standard123',
-  displayName: 'standard_user',
-};
+| Flow | Account | How to use it |
+|---|---|---|
+| Cart, checkout, orders, signed-in navigation, API shopper flow | Shared customer | `loadSignedUpUser()` |
+| Seeded username login (`FR-AUTH-002`) | `standard_user` / `standard123` | `STANDARD_USER` |
+| Locked login | `locked_user` / `locked123` | `LOCKED_USER` |
+| Admin | `admin_user` | `ADMIN_USER`. Password is `$Admin` plus the local date as `DDMMYYYY` |
+| Signup form | A new visitor | `createSignupAccount()`. This does not replace `customer.json` |
+| WebMCP shopping tools | A new visitor | `createSignupAccount()` inside the WebMCP spec |
 
-export const ADMIN_USER = {
-  username: 'admin_user',
-  password: '$Admin<ddmmyyyy>',
-  displayName: 'admin_user',
-};
+Global setup sends `POST /api/auth/signup` with email, phone, username, and password, then saves the account to `playwright/.auth/customer.json`. That file is gitignored. The signup password is `NewUser1!` (8 characters, an uppercase letter, and a number). Login accepts the username or the email.
 
-export const LOCKED_USER = {
-  username: 'locked_user',
-  password: 'locked123',
-};
-```
+The signup specs register their own visitors so they can exercise the form. Google sign-in is on the login page and is left for a person to complete.
 
-### Checkout Data (`src/test-data/checkout.ts`)
+One customer has one cart. Parallel tests that sign in as the shared customer share that cart. WebMCP tests that add items or place orders create their own account for that reason.
+
+Checkout data lives in `src/test-data/checkout.ts`. The published test card is `4242424242424242`. WebMCP order calls build an expiry that stays in the future. The UI checkout tests use `VALID_PAYMENT` from that file.
 
 ```typescript
-export const VALID_CHECKOUT_DATA = {
-  shipping: {
-    firstName: 'John',
-    lastName: 'Doe',
-    address: '123 Main Street, City, ST 12345',
-  },
-  payment: {
-    cardNumber: '4242424242424242',  // Test card
-    expiryDate: '12/28',
-    cvv: '123',
-    cardholderName: 'John Doe',
-  },
+export const VALID_SHIPPING = {
+  firstName: 'John',
+  lastName: 'Doe',
+  address: '123 Test Street, Test City, TC 12345',
+};
+
+export const VALID_PAYMENT = {
+  cardNumber: '4242424242424242',
+  expiryDate: '12/26',
+  cvv: '123',
+  cardholderName: 'John Doe',
 };
 ```
 
@@ -370,35 +391,33 @@ export const VALID_CHECKOUT_DATA = {
 
 | Command | Description |
 |---------|-------------|
-| `npm test` | Run all tests headlessly |
+| `npm test` | Run `@p1`, `@p2`, `@agent`, and `@API` tests |
+| `npm run test:all` | Run `@p1` through `@p4` |
+| `npm run test:p1` / `test:p2` / `test:p1p2` | Run one priority, or p1 and p2 together |
+| `npm run test:p3` / `test:p4` | Run the lower-priority specs |
 | `npm run test:ui` | Open Playwright UI mode |
-| `npm run test:headed` | Run with visible browser |
-| `npm run test:debug` | Debug mode with inspector |
-| `npm run test:auth` | Run authentication tests only |
-| `npm run test:catalog` | Run catalog tests only |
-| `npm run test:cart` | Run cart tests only |
-| `npm run test:checkout` | Run checkout tests only |
-| `npm run test:orders` | Run order tests only |
-| `npm run test:admin` | Run admin tests only |
-| `npm run test:api` | Run API tests only |
-| `npm run report` | Open HTML test report |
-| `npm run codegen` | Launch Playwright codegen |
+| `npm run test:headed` | Run with a visible browser |
+| `npm run test:debug` | Debug with the inspector |
+| `npm run test:auth` | Authentication and signup specs |
+| `npm run test:catalog` | Catalog specs |
+| `npm run test:cart` | Cart specs |
+| `npm run test:checkout` | Checkout specs |
+| `npm run test:orders` | Order specs |
+| `npm run test:admin` | Admin specs |
+| `npm run test:api` | REST API specs |
+| `npm test -- tests/webmcp.spec.ts` | WebMCP specs |
+| `npm run report` | Open the HTML report |
+| `npm run lint` | Run ESLint |
+| `npm run codegen` | Launch Playwright codegen against qademo.com |
 
-### Qase results
-
-When `QASEToken` is in the repo `.env`, or `QASE_TESTOPS_API_TOKEN` is set, results are added to [Qase run 1](https://app.qase.io/run/QADEMO/dashboard/1). A pipeline does not create a new run. The GitHub Actions workflow includes a **Publish results to Qase** job with that same link. `npm test` runs `@p1` and `@p2` only. Each result is posted to the case whose title is `{FR-ID}: {test title}`. A failed test uploads the Playwright screenshot. Tests with no matching case, including seed and setup, still run and are left out of the run.
+`npm test` uses the grep in `playwright.config.ts`: `/@p1|@p2|@agent|@API/`. A CLI `--grep` replaces that filter. API tests are tagged `@API` and `@p1` or `@p2`, so they are included in the default run. `@p3` and `@p4` stay out of `npm test` and out of the GitHub Actions shards.
 
 ### Browser Selection
 
-```bash
-# Single browser
-npm test -- --project=chromium
-npm test -- --project=firefox
-npm test -- --project=webkit
+The active project is Chromium. Firefox, WebKit, and the mobile projects are present in `playwright.config.ts` as comments. Chromium launches with `--enable-features=WebMCP` so the store tools are visible to `page.webmcp`.
 
-# Mobile devices
-npm test -- --project="Mobile Chrome"
-npm test -- --project="Mobile Safari"
+```bash
+npm test -- --project=chromium
 ```
 
 ### Filtering Tests
@@ -420,7 +439,7 @@ npm test -- --grep "@API"     # API tests only
 
 ### API Testing 🚀
 
-The framework includes comprehensive REST API testing capabilities using Playwright's native `request` context. All 11 API tests validate the complete E2E order flow and admin operations with 100% pass rate.
+`tests/api.spec.ts` drives the QADemo REST API with Playwright's `request` context. The shopper flow signs in as the shared customer. The admin flow signs in as `admin_user`. The file runs in serial mode so the token, cart session, and order id carry from one test to the next.
 
 #### Test Coverage
 
@@ -488,11 +507,12 @@ test.describe('API Testing - E2E Order Flow', () => {
   });
 
   test('Login as Standard User', async ({ request }) => {
-    await test.step('Login with standard user credentials', async () => {
+    await test.step('Login with the signed-up customer', async () => {
+      const customer = loadSignedUpUser();
       const loginResponse = await request.post(`${baseURL}/auth/login`, {
         data: {
-          username: STANDARD_USER.username,
-          password: STANDARD_USER.password,
+          username: customer.username,
+          password: customer.password,
         },
       });
       
@@ -553,15 +573,17 @@ expect(responseBody.data.status).toBe('processing');
 
 #### Important Notes
 
-- **Authentication:** Tests use JWT Bearer tokens from login API (not hardcoded credentials)
+- **Shopper:** The standard-user API flow signs in as the shared customer from global setup
+- **Admin:** Admin API calls sign in as `admin_user` with the date-based password
+- **Authentication:** Tests use JWT Bearer tokens from the login API
 - **Session Management:** Unique UUID session ID per test run for cart operations
-- **Stock Updates:** May be asynchronous; admin API provides real-time data
-- **Serial Mode:** Required for maintaining shared state (tokens, order ID)
-- **Test Data:** Uses Product ID 1, test card 4242424242424242
+- **Stock Updates:** May be asynchronous; the admin API provides the stock value the tests assert
+- **Serial Mode:** The file runs in serial mode so the token, session, and order id stay in order
+- **Test Data:** Uses Product ID 1 and test card 4242424242424242
 
-#### Test Results
+#### Example run
 
-Latest execution: **11 passed (12-14s) • 100% pass rate**
+A full API file looks like this when the shared customer and admin login both succeed:
 
 ```
 ✓ Login as Standard User and save access token (1.0s)
@@ -579,72 +601,125 @@ Latest execution: **11 passed (12-14s) • 100% pass rate**
 
 ---
 
+## Qase Test Management
+
+Results go to the Qase project **QADEMO**, [run 1](https://app.qase.io/run/QADEMO/dashboard/1). A local run and every GitHub Actions shard add results to that same run. The reporter is configured with `complete: false`, so a pipeline does not open a new run and does not close run 1.
+
+### Suites
+
+| Suite | What it holds |
+|---|---|
+| eCommerce | Manual cases from `docs/e2e-test-cases.csv` |
+| QADemo Automation | One automated case for each `test()` in `tests/*.spec.ts`, except `seed.spec.ts` and `*.setup.ts` |
+
+### How a result finds its case
+
+The case title is `{FR-ID}: {test title}`. The requirement id comes from the nearest `test.describe` title, for example `@p1 FR-MCP-001: Registered store tools`.
+
+Global setup downloads those titles into `playwright/.cache/qase-case-map.json`. The `qaseCase` fixture then calls `qase.id()` for a match. Seed tests, setup tests, and any title that is not in the suite still run. Their results are omitted from the run.
+
+Failed tests upload the Playwright screenshot. `screenshot: 'only-on-failure'` and the reporter's `uploadAttachments` setting do that work.
+
+### Token
+
+Put the token in one of these places:
+
+| Location | Name |
+|---|---|
+| `.env` in this directory, or the parent directory | `QASEToken` |
+| Environment variable | `QASE_TESTOPS_API_TOKEN` or `QASE_API_TOKEN` |
+| GitHub Actions secret | `QASE_API_TOKEN` |
+
+The request header is `Token`, sent to `https://api.qase.io/v1`. Do not commit the token, print it, or write it into a spec.
+
+### Publishing a new spec
+
+After you add a test, publish its case before you expect a result in run 1:
+
+```bash
+node docs/skills/adding-qademo-tests/scripts/push-spec-cases.mjs
+```
+
+A dry run parses the specs and does not call Qase:
+
+```bash
+node docs/skills/adding-qademo-tests/scripts/push-spec-cases.mjs --dry-run
+```
+
+The script creates the QADemo Automation suite when it is missing and skips a title that is already there. New cases are automated (`automation: 2`, `isManual: 0`). Renaming a test leaves the old case in place, so update that case instead of publishing a second one.
+
+`docs/skills/adding-qademo-tests/SKILL.md` is the guide for adding a spec, choosing an account, and publishing the case.
+
+### What you see in GitHub Actions
+
+The test shards upload the results while Playwright is running. The **Publish results to Qase** job then adds a summary link and a clickable environment URL to the same run, so a viewer can open the report from the workflow graph.
+
+---
+
+## WebMCP Tests
+
+QADemo registers store tools on `document.modelContext` so an agent can search, sign in, change the cart, and place an order without clicking the page. Playwright 1.64 exposes those tools as [`page.webmcp`](https://playwright.dev/docs/api/class-webmcp).
+
+Chromium needs the launch flag `--enable-features=WebMCP`. The Chromium project sets that flag. Without it, `page.webmcp.tools()` throws.
+
+`tests/webmcp.spec.ts` checks that the tools are present and that a real shopper flow works through them:
+
+| Case | Check |
+|---|---|
+| FR-MCP-001 | The store tools are registered, with read-only and consequential hints |
+| FR-MCP-002 | Search and load Wireless Headphones |
+| FR-MCP-003 | Create an account, add the headphones, place an order, and open the order page |
+| FR-MCP-004 | Invalid sign-in, invalid signup, and a guest order list are rejected |
+| FR-MCP-005 | Change a quantity, clear the cart, and refuse an empty checkout |
+| FR-MCP-006 | `open_page` opens the catalog and the product page in the browser |
+| FR-MCP-007 | An unknown tool name is rejected |
+
+A tool that rejects the input returns `{ ok: false, error: { code, message } }`. An unknown name throws, because Playwright never reaches an `execute` function. Shopping tools create a fresh visitor with `createSignupAccount()` so they do not change the shared customer's cart.
+
+```bash
+npm test -- tests/webmcp.spec.ts --project=chromium
+```
+
+`src/utils/webmcp.ts` wraps `page.webmcp.callTool` and reads the order id from a successful `place_order` result.
+
+---
+
 ## CI/CD Integration
 
 ### GitHub Actions
 
-The framework includes two workflow configurations:
+`.github/workflows/playwright.yml` runs on push and pull request to `main` or `master`, every day at 06:00 UTC, and on manual dispatch. A push or pull request that only changes Markdown files does not start it. It installs Node.js 24 and runs four Chromium shards:
 
-#### Basic Workflow (`.github/workflows/playwright.yml`)
-
-Runs all tests on a single runner:
-
-```yaml
-name: Playwright Tests
-on: [push, pull_request]
-jobs:
-  test:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-      - run: npm ci
-      - run: npx playwright install --with-deps
-      - run: npx playwright test
+```bash
+npx playwright test --project=chromium --shard=${{ matrix.shardIndex }}/${{ matrix.shardTotal }}
 ```
 
-#### Sharded Workflow (`.github/workflows/playwright-sharded.yml`)
+Each shard receives `QASE_TESTOPS_RUN_ID=1` and `QASE_TESTOPS_RUN_COMPLETE=false`, so all four shards write into [run 1](https://app.qase.io/run/QADEMO/dashboard/1). The secret name is `QASE_API_TOKEN`.
 
-Runs tests in parallel across multiple runners for faster feedback:
+| Job | What it does |
+|---|---|
+| Shard 1–4 | Installs dependencies, caches Chromium, runs one quarter of the default grep, uploads a blob report |
+| Publish results to Qase | Adds a workflow summary and an environment link to run 1 |
+| Merge Playwright Reports | Merges the four blob reports into one HTML report |
+| Deploy Report to GitHub Pages | Publishes that HTML report on pushes that are not pull requests |
 
-```yaml
-jobs:
-  test:
-    strategy:
-      matrix:
-        shardIndex: [1, 2, 3, 4]
-        shardTotal: [4]
-    steps:
-      - run: npx playwright test --shard=${{ matrix.shardIndex }}/${{ matrix.shardTotal }}
-```
+Actions use the Node.js 24 releases: `checkout` v7, `setup-node` v7, `cache` v6, `upload-artifact` v7, `download-artifact` v8, `configure-pages` v6, `upload-pages-artifact` v5, and `deploy-pages` v5.
 
-### GitHub Pages Test Reports 📊
+### GitHub Pages test reports
 
-Test reports are automatically published to GitHub Pages after every push to `main`/`master` branch.
+After a push to `main` or `master`, the deploy job publishes the merged HTML report. The report includes pass and fail details, screenshots, traces, and video from failed tests.
 
-**Live Report URL:**
-```
-https://<username>.github.io/<repository-name>/
-```
+1. Open repository **Settings** → **Pages**.
+2. Set **Source** to **GitHub Actions**.
+3. Push to `main` or `master`.
 
-**Features:**
-- ✅ Interactive HTML report with pass/fail details
-- ✅ Screenshots on test failures
-- ✅ Trace viewer for debugging
-- ✅ Filtering and search capabilities
+The deployed URL is the environment link on the **Deploy Report to GitHub Pages** job. Setup notes are in [docs/github-pages-setup.md](docs/github-pages-setup.md).
 
-**Setup Required:**
-1. Go to repository **Settings** → **Pages**
-2. Set **Source** to **GitHub Actions**
-3. Push to `main`/`master` to trigger deployment
+### Authentication during a run
 
-See [docs/github-pages-setup.md](docs/github-pages-setup.md) for detailed setup instructions.
+Global setup creates the shared customer and writes `playwright/.auth/customer.json`. Cart, checkout, order, signed-in navigation, and the API shopper tests call `loadSignedUpUser()` and sign in themselves.
 
-### Storage State Authentication
-
-Global setup creates a new customer through `/api/auth/signup` and saves that login in `playwright/.auth/customer.json`. Cart, checkout, order, navigation, and API tests sign in with that account. The signup specs register additional visitors so they can check the form without sharing state with the rest of the suite.
-
-`auth.setup.ts` then signs in as that customer, and as the admin user, and saves storage state. Admin password is `$Admin` plus today's date as `DDMMYYYY`.
+`auth.setup.ts` also signs in as that customer and as `admin_user`, then saves storage state under `playwright/.auth/`. The Chromium project does not load that storage state, so a guest test starts signed out. The admin password is `$Admin` plus the runner's local date as `DDMMYYYY`. GitHub-hosted Ubuntu uses UTC.
 
 ---
 
@@ -823,10 +898,14 @@ page.locator('button').first();  // Fix the locator instead
 
 | Issue | Cause | Solution |
 |-------|-------|----------|
-| `strict mode violation` | Locator matches multiple elements | Make locator more specific (add role, name, or scope) |
-| `Timeout waiting for element` | Element not loaded | Wait for page content with `waitFor()` |
-| `Navigation timeout` | Slow page load | Increase `navigationTimeout` in config |
-| `Element not visible` | Element hidden or off-screen | Scroll to element or check visibility conditions |
+| `strict mode violation` | Locator matches multiple elements | Make the locator more specific with a role, name, or scope |
+| `Timeout waiting for element` | Element not loaded | Wait for the element with `waitFor()` |
+| `Navigation timeout` | Slow page load | Increase `navigationTimeout` in the config |
+| `Element not visible` | Element hidden or off-screen | Scroll to the element or check the visibility condition |
+| Admin setup stays on `/login` | The admin password uses the machine's local date | On a runner, that date is UTC. Locally it follows your timezone |
+| `No WebMCP tool` or `tools()` throws | Chromium was launched without the WebMCP flag | Run the `chromium` project. Its launch args include `--enable-features=WebMCP` |
+| A new spec is missing from Qase | The case title is not in QADemo Automation yet | Run the push script, then run the spec again |
+| Qase has no result for a passing test | The token is missing, or the title does not match `{FR-ID}: {test title}` | Set `QASEToken` and keep the describe id plus the `test()` title unchanged |
 
 ### Debugging Tips
 
@@ -872,5 +951,8 @@ ISC
 
 - [Playwright Documentation](https://playwright.dev/docs/intro)
 - [Playwright Best Practices](https://playwright.dev/docs/best-practices)
+- [Playwright WebMCP](https://playwright.dev/docs/api/class-webmcp)
+- [Qase API](https://developers.qase.io/reference/introduction-to-the-qase-api)
+- [QADemo Automation run](https://app.qase.io/run/QADEMO/dashboard/1)
 - [QADemo Application](https://qademo.com)
 
