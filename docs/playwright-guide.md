@@ -72,7 +72,7 @@ While the standard initialization command `npm init playwright@latest` scaffolds
 │   └── visual/             # Visual regression tests
 ├── playwright.config.ts    # Main configuration file
 ├── tsconfig.json           # TypeScript compiler configuration
-├── .eslintrc.json          # Linting rules
+├── eslint.config.mjs       # Linting rules
 ├── .prettierrc             # Formatting rules
 └── package.json            # Dependencies and scripts
 ```

@@ -23,7 +23,7 @@
     "test:api": "npx playwright test tests/api.spec.ts",
     "report": "npx playwright show-report",
     "codegen": "npx playwright codegen https://qademo.com",
-    "lint": "eslint src tests --ext .ts",
+    "lint": "eslint .",
     "agent:init": "npx playwright init-agents --loop=vscode",
     "agent:seed": "npx playwright test --grep \"@agent\" --project=chromium",
     "agent:mcp": "npx playwright run-test-mcp-server"
@@ -38,13 +38,15 @@
   "author": "",
   "license": "ISC",
   "devDependencies": {
-    "@playwright/test": "^1.52.0",
-    "@types/node": "^22.0.0",
-    "@typescript-eslint/eslint-plugin": "^8.0.0",
-    "@typescript-eslint/parser": "^8.0.0",
-    "eslint": "^9.0.0",
-    "eslint-plugin-playwright": "^2.0.0",
+    "@eslint/js": "^10.0.1",
+    "@playwright/test": "^1.64.1",
+    "@types/node": "^26.6.5",
+    "@typescript-eslint/eslint-plugin": "^8.71.2",
+    "@typescript-eslint/parser": "^8.71.2",
+    "eslint": "^10.13.0",
+    "eslint-plugin-playwright": "^2.12.1",
+    "globals": "^17.13.0",
     "playwright-qase-reporter": "^2.7.0",
-    "typescript": "^5.7.0"
+    "typescript": "^6.0.3"
   }
 }

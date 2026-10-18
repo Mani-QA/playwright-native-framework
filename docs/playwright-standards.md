@@ -19,7 +19,7 @@ my-automation-framework/
 │   └── test-data/           # JSON/CSV static data files
 ├── playwright.config.ts     # Main Playwright Configuration
 ├── .cursorrules             # AI Context Rules (Place in root)
-├── .eslintrc.js             # Linting rules
+├── eslint.config.mjs        # Linting rules
 └── package.json
 ```
 

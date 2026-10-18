@@ -2,7 +2,7 @@
   "compilerOptions": {
     "target": "ESNext",
     "module": "commonjs",
-    "moduleResolution": "node",
+    "moduleResolution": "bundler",
     "strict": true,
     "noImplicitAny": true,
     "esModuleInterop": true,
@@ -12,15 +12,7 @@
     "declaration": true,
     "declarationMap": true,
     "sourceMap": true,
-    "outDir": "./dist",
-    "baseUrl": ".",
-    "paths": {
-      "@pages/*": ["src/pages/*"],
-      "@components/*": ["src/components/*"],
-      "@fixtures/*": ["src/fixtures/*"],
-      "@utils/*": ["src/utils/*"],
-      "@test-data/*": ["src/test-data/*"]
-    }
+    "outDir": "./dist"
   },
   "include": ["tests/**/*.ts", "src/**/*.ts", "global-setup.ts", "playwright.config.ts"],
   "exclude": ["node_modules", "dist"]
