@@ -94,6 +94,6 @@ Mapping used by the script: priority `@p1` high, `@p2` medium, `@p3` and `@p4` l
 
 ## Report results
 
-A Playwright run with a Qase token creates a test run named **QADemo Automation** and posts each result to the case with the same title, `{FR-ID}: {test title}`. Global setup downloads that map from the suite. The `qaseCase` fixture calls `qase.id()` for a match. Seed, setup, and any test whose title is not in the suite are executed but not sent.
+A Playwright run with a Qase token posts each result into the existing test run [QADEMO run 1](https://app.qase.io/run/QADEMO/dashboard/1). It does not create or complete a run. The default command runs `@p1` and `@p2` only. Each result is matched to the case titled `{FR-ID}: {test title}`. Global setup downloads that map from the suite. The `qaseCase` fixture calls `qase.id()` for a match. Seed, setup, and any test whose title is not in the suite are executed but not sent. CI shards all write to run 1.
 
 Keep the Qase title identical to the requirement id plus the `test()` title. Publish a new spec with the push script before expecting its result to appear. Failure screenshots come from Playwright's `screenshot: 'only-on-failure'` setting and are uploaded with the result. Do not log the token. CI reads `secrets.QASE_API_TOKEN`.

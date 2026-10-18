@@ -17,9 +17,11 @@ if (qaseToken) {
         project: 'QADEMO',
         uploadAttachments: true,
         run: {
+          // Keep posting into this run. A new pipeline must not open another one.
+          id: Number(process.env.QASE_TESTOPS_RUN_ID ?? 1),
           title: 'QADemo Automation',
-          description: 'Playwright results for the QADemo Automation suite, including screenshots from failed tests.',
-          complete: true,
+          description: 'Playwright p1 and p2 results for the QADemo Automation suite, including screenshots from failed tests.',
+          complete: false,
         },
       },
     },
