@@ -383,6 +383,10 @@ export const VALID_CHECKOUT_DATA = {
 | `npm run report` | Open HTML test report |
 | `npm run codegen` | Launch Playwright codegen |
 
+### Qase results
+
+When `QASEToken` is in the repo `.env`, or `QASE_TESTOPS_API_TOKEN` is set, each run opens a Qase test run named **QADemo Automation**. Results are posted to the case whose title is `{FR-ID}: {test title}`. A failed test uploads the Playwright screenshot. Tests with no matching case, including seed and setup, still run and are left out of the run.
+
 ### Browser Selection
 
 ```bash

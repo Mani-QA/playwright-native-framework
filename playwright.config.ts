@@ -1,4 +1,30 @@
-import { defineConfig, devices } from '@playwright/test';
+import { defineConfig, devices, type ReporterDescription } from '@playwright/test';
+import { loadQaseToken } from './src/qase/token';
+
+const qaseToken = loadQaseToken();
+if (qaseToken) process.env.QASE_TESTOPS_API_TOKEN = qaseToken;
+
+const reporter: ReporterDescription[] = process.env.CI
+  ? [['blob'], ['github'], ['list']]
+  : [['html', { open: 'never' }], ['list']];
+
+if (qaseToken) {
+  reporter.push([
+    'playwright-qase-reporter',
+    {
+      mode: 'testops',
+      testops: {
+        project: 'QADEMO',
+        uploadAttachments: true,
+        run: {
+          title: 'QADemo Automation',
+          description: 'Playwright results for the QADemo Automation suite, including screenshots from failed tests.',
+          complete: true,
+        },
+      },
+    },
+  ]);
+}
 
 /**
  * Playwright Configuration for QADemo E-Commerce Application
@@ -30,12 +56,9 @@ export default defineConfig({
   // Opt out of parallel tests on CI
   workers: process.env.CI ? 1 : undefined,
 
-  // Reporter to use
-  // Use blob reporter for CI sharding (merged to HTML in workflow), add github for annotations
-  // HTML reporter for local runs
-  reporter: process.env.CI
-    ? [['blob'], ['github'], ['list']]
-    : [['html', { open: 'never' }], ['list']],
+  // HTML or blob locally/CI, plus Qase when a token is available.
+  // Failure screenshots from `screenshot: 'only-on-failure'` are uploaded with the result.
+  reporter,
 
   // Shared settings for all projects
   use: {

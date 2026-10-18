@@ -70,6 +70,7 @@ jobs:
         run: npx playwright test --project=chromium --shard=${{ matrix.shardIndex }}/${{ matrix.shardTotal }}
         env:
           CI: true
+          QASE_TESTOPS_API_TOKEN: ${{ secrets.QASE_API_TOKEN }}
 
       - name: Upload blob report
         uses: actions/upload-artifact@v4

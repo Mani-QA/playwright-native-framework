@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect } from '../src/fixtures/pomFixtures';
 import { loadSignedUpUser, ADMIN_USER } from '../src/test-data';
 import { randomUUID } from 'crypto';
 

@@ -1,4 +1,7 @@
-import { test as base } from '@playwright/test';
+import fs from 'fs';
+import { test as base, type TestInfo } from '@playwright/test';
+import { qase } from 'playwright-qase-reporter';
+import { QASE_CASE_MAP_PATH } from '../qase/sync-case-map';
 
 // Page Objects
 import { LoginPage } from '../pages/LoginPage';
@@ -20,6 +23,7 @@ import { Footer } from '../components/Footer';
  * Type definition for all Page Object fixtures
  */
 type PageFixtures = {
+  qaseCase: void;
   loginPage: LoginPage;
   signupPage: SignupPage;
   homePage: HomePage;
@@ -38,7 +42,34 @@ type PageFixtures = {
  * Extended test object with injected Page Objects
  * Use this instead of the standard '@playwright/test' import in test files
  */
+let caseMap: Record<string, number> | undefined;
+
+function qaseCaseId(testInfo: TestInfo): number | undefined {
+  caseMap ??= fs.existsSync(QASE_CASE_MAP_PATH)
+    ? (JSON.parse(fs.readFileSync(QASE_CASE_MAP_PATH, 'utf8')) as Record<string, number>)
+    : {};
+
+  const requirement = [...testInfo.titlePath]
+    .reverse()
+    .map((part) => part.match(/FR-[A-Z]+-\d+/)?.[0])
+    .find((value): value is string => Boolean(value));
+
+  if (!requirement) return undefined;
+  return caseMap[`${requirement}: ${testInfo.title}`];
+}
+
 export const test = base.extend<PageFixtures>({
+  // Link a spec to its Qase case. Seed, setup, and unmapped tests still run, but are not reported.
+  qaseCase: [
+    async ({}, use, testInfo) => {
+      const caseId = qaseCaseId(testInfo);
+      if (caseId) qase.id(caseId);
+      else qase.ignore();
+      await use();
+    },
+    { auto: true },
+  ],
+
   // Page Objects - instantiated per test
 
   loginPage: async ({ page }, use) => {

@@ -1,4 +1,5 @@
 import { request, type FullConfig } from '@playwright/test';
+import { syncQaseCaseMap } from './src/qase/sync-case-map';
 import { createSignupAccount, saveSignedUpUser } from './src/test-data/signedUpUser';
 
 /**
@@ -34,5 +35,6 @@ export default async function globalSetup(config: FullConfig): Promise<void> {
     saveSignedUpUser(account);
   } finally {
     await api.dispose();
+    await syncQaseCaseMap();
   }
 }
