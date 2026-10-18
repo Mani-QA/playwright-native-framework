@@ -90,6 +90,25 @@ jobs:
           path: test-results/
           retention-days: 7
 
+  publish-qase:
+    name: Publish results to Qase
+    needs: [test]
+    if: ${{ !cancelled() }}
+    runs-on: ubuntu-latest
+    environment:
+      name: qase
+      url: https://app.qase.io/run/QADEMO/dashboard/1
+
+    steps:
+      - name: Publish results to Qase
+        run: |
+          {
+            echo "### Qase report"
+            echo "Playwright results from this workflow were added to the existing Qase run."
+            echo ""
+            echo "[Open QADemo Automation run](https://app.qase.io/run/QADEMO/dashboard/1)"
+          } >> "$GITHUB_STEP_SUMMARY"
+
   merge-reports:
     name: Merge Playwright Reports
     if: ${{ !cancelled() }}

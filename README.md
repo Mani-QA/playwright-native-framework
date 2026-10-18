@@ -385,7 +385,7 @@ export const VALID_CHECKOUT_DATA = {
 
 ### Qase results
 
-When `QASEToken` is in the repo `.env`, or `QASE_TESTOPS_API_TOKEN` is set, results are added to [Qase run 1](https://app.qase.io/run/QADEMO/dashboard/1). A pipeline does not create a new run. `npm test` runs `@p1` and `@p2` only. Each result is posted to the case whose title is `{FR-ID}: {test title}`. A failed test uploads the Playwright screenshot. Tests with no matching case, including seed and setup, still run and are left out of the run.
+When `QASEToken` is in the repo `.env`, or `QASE_TESTOPS_API_TOKEN` is set, results are added to [Qase run 1](https://app.qase.io/run/QADEMO/dashboard/1). A pipeline does not create a new run. The GitHub Actions workflow includes a **Publish results to Qase** job with that same link. `npm test` runs `@p1` and `@p2` only. Each result is posted to the case whose title is `{FR-ID}: {test title}`. A failed test uploads the Playwright screenshot. Tests with no matching case, including seed and setup, still run and are left out of the run.
 
 ### Browser Selection
 
