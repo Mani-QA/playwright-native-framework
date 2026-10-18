@@ -1,29 +1,23 @@
-import { test as setup, expect } from '@playwright/test';
-import { STANDARD_USER, ADMIN_USER } from '../src/test-data';
+import { test as setup, expect } from '../src/fixtures/pomFixtures';
+import { ADMIN_USER, loadSignedUpUser } from '../src/test-data';
 
 const STORAGE_STATE_DIR = 'playwright/.auth';
 
 /**
- * Authentication setup for Standard User
- * Creates a storage state file that can be used by tests requiring standard user authentication
+ * Sign in as the customer created during global setup.
+ * Shopping tests still log in themselves; this storage state is the same account.
  */
-setup('authenticate as standard user', async ({ page }) => {
-  await setup.step('Navigate to login page', async () => {
-    await page.goto('/login');
-  });
+setup('@p1 authenticate as signed-up customer', async ({ page, loginPage }) => {
+  const customer = loadSignedUpUser();
 
-  await setup.step('Fill login credentials for standard user', async () => {
-    await page.getByLabel('Username').fill(STANDARD_USER.username);
-    await page.getByLabel('Password').fill(STANDARD_USER.password);
-  });
-
-  await setup.step('Click Sign In button', async () => {
-    // Use the form's submit button (in main content area), not the navbar button
-    await page.getByRole('main').getByRole('button', { name: 'Sign In' }).click();
+  await setup.step('Sign in with the account created at signup', async () => {
+    await loginPage.goto();
+    await loginPage.login(customer.username, customer.password);
   });
 
   await setup.step('Verify login success - redirected to catalog', async () => {
     await expect(page).toHaveURL(/catalog/);
+    await expect(page.getByRole('navigation').getByRole('link', { name: new RegExp(customer.username, 'i') })).toBeVisible();
   });
 
   await setup.step('Save authentication state', async () => {
@@ -32,22 +26,13 @@ setup('authenticate as standard user', async ({ page }) => {
 });
 
 /**
- * Authentication setup for Admin User
- * Creates a storage state file that can be used by tests requiring admin user authentication
+ * Authentication setup for Admin User.
+ * Password is `$Admin` plus the current date as DDMMYYYY.
  */
-setup('authenticate as admin user', async ({ page }) => {
-  await setup.step('Navigate to login page', async () => {
-    await page.goto('/login');
-  });
-
-  await setup.step('Fill login credentials for admin user', async () => {
-    await page.getByLabel('Username').fill(ADMIN_USER.username);
-    await page.getByLabel('Password').fill(ADMIN_USER.password);
-  });
-
-  await setup.step('Click Sign In button', async () => {
-    // Use the form's submit button (in main content area), not the navbar button
-    await page.getByRole('main').getByRole('button', { name: 'Sign In' }).click();
+setup('@p1 authenticate as admin user', async ({ page, loginPage, navBar }) => {
+  await setup.step('Sign in with admin credentials', async () => {
+    await loginPage.goto();
+    await loginPage.login(ADMIN_USER.username, ADMIN_USER.password);
   });
 
   await setup.step('Verify login success - redirected to catalog', async () => {
@@ -55,12 +40,10 @@ setup('authenticate as admin user', async ({ page }) => {
   });
 
   await setup.step('Verify admin link is visible', async () => {
-    // Use exact: true to avoid matching "admin_user" username link
-    await expect(page.getByRole('link', { name: 'Admin', exact: true })).toBeVisible();
+    await expect(navBar.adminButton).toBeVisible();
   });
 
   await setup.step('Save authentication state', async () => {
     await page.context().storageState({ path: `${STORAGE_STATE_DIR}/admin-user.json` });
   });
 });
-

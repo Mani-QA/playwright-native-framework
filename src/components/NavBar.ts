@@ -11,6 +11,7 @@ export class NavBar {
   readonly cartIcon: Locator;
   readonly cartBadge: Locator;
   readonly signInButton: Locator;
+  readonly signUpButton: Locator;
   readonly usernameLink: Locator;
   readonly adminButton: Locator;
   readonly logoutButton: Locator;
@@ -29,16 +30,16 @@ export class NavBar {
     this.cartIcon = page.getByRole('navigation').locator('a[href="/cart"]');
     this.cartBadge = page.getByRole('navigation').locator('a[href="/cart"]').locator('div').last();
 
-    // Authentication - Guest state (scope to navigation to avoid footer link)
-    this.signInButton = page.getByRole('navigation').getByRole('link', { name: /Sign In/i });
+    // Authentication - Guest state (scope to navigation to avoid footer links)
+    // Accessible names are "Sign in" and "Sign up"; visible labels are "Sign In" and "Sign Up"
+    this.signInButton = page.getByRole('navigation').getByRole('link', { name: /^Sign in$/i });
+    this.signUpButton = page.getByRole('navigation').getByRole('link', { name: /^Sign up$/i });
 
     // Authentication - Logged in state
-    // Username link goes to /orders - find it in the navigation
-    this.usernameLink = page.getByRole('navigation').locator('a[href="/orders"]');
-    // Admin link in navigation - the link contains text "Admin" and has href="/admin"
-    this.adminButton = page.getByRole('navigation').locator('a[href="/admin"]');
-    // Logout button is an icon-only button in the navigation (the one that's not the Admin button)
-    this.logoutButton = page.getByRole('navigation').getByRole('button').last();
+    // Accessible name is "View orders for {username}"; the visible text is the username
+    this.usernameLink = page.getByRole('navigation').getByRole('link', { name: /View orders for/i });
+    this.adminButton = page.getByRole('navigation').getByRole('link', { name: 'Admin dashboard' });
+    this.logoutButton = page.getByRole('navigation').getByRole('button', { name: 'Logout' });
 
     // Mobile menu
     this.mobileMenuButton = page.getByRole('button', { name: /Menu|Toggle navigation/i });
@@ -72,6 +73,13 @@ export class NavBar {
    */
   async clickSignIn(): Promise<void> {
     await this.signInButton.click();
+  }
+
+  /**
+   * Navigate to the signup page
+   */
+  async clickSignUp(): Promise<void> {
+    await this.signUpButton.click();
   }
 
   /**

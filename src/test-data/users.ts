@@ -31,13 +31,26 @@ export const LOCKED_USER: TestUser = {
 };
 
 /**
+ * Admin password is `$Admin` plus today's date as DDMMYYYY.
+ * Example: 18 October 2026 -> `$Admin18102026`
+ */
+export function getAdminPassword(date: Date = new Date()): string {
+  const day = String(date.getDate()).padStart(2, '0');
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const year = String(date.getFullYear());
+  return `$Admin${day}${month}${year}`;
+}
+
+/**
  * Admin user - Has access to admin dashboard
  */
 export const ADMIN_USER: TestUser = {
   username: 'admin_user',
-  password: 'admin123',
+  get password() {
+    return getAdminPassword();
+  },
   userType: 'admin',
-  description: 'Administrator - all standard permissions plus admin dashboard',
+  description: 'Administrator - password is $Admin plus the current date as DDMMYYYY',
 };
 
 /**

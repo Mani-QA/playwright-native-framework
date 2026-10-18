@@ -1,5 +1,5 @@
 import { test, expect } from '../src/fixtures/pomFixtures';
-import { STANDARD_USER } from '../src/test-data';
+import { loadSignedUpUser } from '../src/test-data';
 
 test.describe('Product Catalog Module', () => {
   test.describe('@p3 FR-PROD-001: Home Page Hero Section', () => {
@@ -70,7 +70,7 @@ test.describe('Product Catalog Module', () => {
   });
 
   test.describe('@p1 FR-PROD-006: Add to Cart from Catalog', () => {
-    test('Login with Standard User - can add product to cart from catalog', async ({
+    test('Signed-up customer - can add product to cart from catalog', async ({
       loginPage,
       catalogPage,
       navBar,
@@ -78,7 +78,8 @@ test.describe('Product Catalog Module', () => {
     }) => {
       await test.step('Navigate to login page and login', async () => {
         await loginPage.goto();
-        await loginPage.login(STANDARD_USER.username, STANDARD_USER.password);
+        const customer = loadSignedUpUser();
+        await loginPage.login(customer.username, customer.password);
       });
 
       await test.step('Navigate to catalog page', async () => {
@@ -106,14 +107,15 @@ test.describe('Product Catalog Module', () => {
   });
 
   test.describe('@p3 FR-PROD-007: In Cart Button Navigation', () => {
-    test('Login with Standard User - In Cart button navigates to cart', async ({
+    test('Signed-up customer - In Cart button navigates to cart', async ({
       loginPage,
       catalogPage,
       page,
     }) => {
       await test.step('Navigate to login page and login', async () => {
         await loginPage.goto();
-        await loginPage.login(STANDARD_USER.username, STANDARD_USER.password);
+        const customer = loadSignedUpUser();
+        await loginPage.login(customer.username, customer.password);
       });
 
       await test.step('Navigate to catalog page', async () => {
@@ -165,7 +167,7 @@ test.describe('Product Catalog Module', () => {
   });
 
   test.describe('@p2 FR-PROD-010: Add to Cart from Detail Page', () => {
-    test('Login with Standard User - can add product from detail page', async ({
+    test('Signed-up customer - can add product from detail page', async ({
       loginPage,
       catalogPage,
       productDetailPage,
@@ -173,7 +175,8 @@ test.describe('Product Catalog Module', () => {
     }) => {
       await test.step('Navigate to login page and login', async () => {
         await loginPage.goto();
-        await loginPage.login(STANDARD_USER.username, STANDARD_USER.password);
+        const customer = loadSignedUpUser();
+        await loginPage.login(customer.username, customer.password);
       });
 
       await test.step('Navigate to catalog and click first product', async () => {

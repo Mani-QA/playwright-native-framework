@@ -1,6 +1,6 @@
 import { test, expect } from '../src/fixtures/pomFixtures';
 import {
-  STANDARD_USER,
+  loadSignedUpUser,
   VALID_CHECKOUT_DATA,
   INVALID_CARD_NUMBER,
 } from '../src/test-data';
@@ -42,14 +42,15 @@ test.describe('Checkout Module', () => {
   });
 
   test.describe('@p2 FR-CHK-002: Empty Cart Redirect', () => {
-    test('Login with Standard User - checkout with empty cart redirects to cart', async ({
+    test('Signed-up customer - checkout with empty cart redirects to cart', async ({
       loginPage,
       checkoutPage,
       page,
     }) => {
       await test.step('Navigate to login page and login', async () => {
         await loginPage.goto();
-        await loginPage.login(STANDARD_USER.username, STANDARD_USER.password);
+        const customer = loadSignedUpUser();
+        await loginPage.login(customer.username, customer.password);
       });
 
       await test.step('Navigate to checkout with empty cart', async () => {
@@ -78,7 +79,7 @@ test.describe('Checkout Module', () => {
   });
 
   test.describe('@p2 FR-CHK-003: Checkout Form Display', () => {
-    test('Login with Standard User - checkout page displays shipping and payment forms', async ({
+    test('Signed-up customer - checkout page displays shipping and payment forms', async ({
       loginPage,
       catalogPage,
       cartPage,
@@ -87,7 +88,8 @@ test.describe('Checkout Module', () => {
     }) => {
       await test.step('Navigate to login page and login', async () => {
         await loginPage.goto();
-        await loginPage.login(STANDARD_USER.username, STANDARD_USER.password);
+        const customer = loadSignedUpUser();
+        await loginPage.login(customer.username, customer.password);
       });
 
       await test.step('Add a product to cart', async () => {
@@ -121,7 +123,7 @@ test.describe('Checkout Module', () => {
   });
 
   test.describe('@p3 FR-CHK-007: Required Field Validation', () => {
-    test('Login with Standard User - submitting empty form shows validation errors', async ({
+    test('Signed-up customer - submitting empty form shows validation errors', async ({
       loginPage,
       catalogPage,
       cartPage,
@@ -130,7 +132,8 @@ test.describe('Checkout Module', () => {
     }) => {
       await test.step('Navigate to login page and login', async () => {
         await loginPage.goto();
-        await loginPage.login(STANDARD_USER.username, STANDARD_USER.password);
+        const customer = loadSignedUpUser();
+        await loginPage.login(customer.username, customer.password);
       });
 
       await test.step('Add a product to cart', async () => {
@@ -159,7 +162,7 @@ test.describe('Checkout Module', () => {
   });
 
   test.describe('@p4 FR-CHK-008: Valid Card Number Validation (Luhn)', () => {
-    test('Login with Standard User - invalid card number shows error', async ({
+    test('Signed-up customer - invalid card number shows error', async ({
       loginPage,
       catalogPage,
       cartPage,
@@ -168,7 +171,8 @@ test.describe('Checkout Module', () => {
     }) => {
       await test.step('Navigate to login page and login', async () => {
         await loginPage.goto();
-        await loginPage.login(STANDARD_USER.username, STANDARD_USER.password);
+        const customer = loadSignedUpUser();
+        await loginPage.login(customer.username, customer.password);
       });
 
       await test.step('Add a product to cart', async () => {
@@ -219,7 +223,7 @@ test.describe('Checkout Module', () => {
   });
 
   test.describe('@p1 @e2e FR-CHK-009: Successful Order Placement', () => {
-    test('Login with Standard User - valid checkout creates order', async ({
+    test('Signed-up customer - valid checkout creates order', async ({
       loginPage,
       catalogPage,
       cartPage,
@@ -229,7 +233,8 @@ test.describe('Checkout Module', () => {
     }) => {
       await test.step('Navigate to login page and login', async () => {
         await loginPage.goto();
-        await loginPage.login(STANDARD_USER.username, STANDARD_USER.password);
+        const customer = loadSignedUpUser();
+        await loginPage.login(customer.username, customer.password);
         // Verify login was successful
         await expect(page).toHaveURL(/catalog/);
         await expect(navBar.logoutButton).toBeVisible({ timeout: 10000 });
@@ -264,7 +269,7 @@ test.describe('Checkout Module', () => {
   });
 
   test.describe('@p3 FR-CHK-010: Test Card Number', () => {
-    test('Login with Standard User - test card number 4242424242424242 works', async ({
+    test('Signed-up customer - test card number 4242424242424242 works', async ({
       loginPage,
       catalogPage,
       cartPage,
@@ -274,7 +279,8 @@ test.describe('Checkout Module', () => {
     }) => {
       await test.step('Navigate to login page and login', async () => {
         await loginPage.goto();
-        await loginPage.login(STANDARD_USER.username, STANDARD_USER.password);
+        const customer = loadSignedUpUser();
+        await loginPage.login(customer.username, customer.password);
       });
 
       await test.step('Add a product to cart', async () => {

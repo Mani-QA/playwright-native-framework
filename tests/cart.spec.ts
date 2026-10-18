@@ -1,5 +1,5 @@
 import { test, expect } from '../src/fixtures/pomFixtures';
-import { STANDARD_USER } from '../src/test-data';
+import { loadSignedUpUser } from '../src/test-data';
 
 /**
  * Helper function to add a product to cart and wait for cart state to sync
@@ -43,7 +43,7 @@ test.describe('Shopping Cart Module', () => {
   });
 
   test.describe('@p1 FR-CART-002: Cart Items Display', () => {
-    test('Login with Standard User - cart displays added items', async ({
+    test('Signed-up customer - cart displays added items', async ({
       loginPage,
       catalogPage,
       cartPage,
@@ -51,7 +51,8 @@ test.describe('Shopping Cart Module', () => {
     }) => {
       await test.step('Navigate to login page and login', async () => {
         await loginPage.goto();
-        await loginPage.login(STANDARD_USER.username, STANDARD_USER.password);
+        const customer = loadSignedUpUser();
+        await loginPage.login(customer.username, customer.password);
       });
 
       await test.step('Navigate to catalog and add a product', async () => {
@@ -77,7 +78,7 @@ test.describe('Shopping Cart Module', () => {
   });
 
   test.describe('@p2 FR-CART-003: Increase Quantity', () => {
-    test('Login with Standard User - can increase item quantity', async ({
+    test('Signed-up customer - can increase item quantity', async ({
       loginPage,
       catalogPage,
       cartPage,
@@ -85,7 +86,8 @@ test.describe('Shopping Cart Module', () => {
     }) => {
       await test.step('Navigate to login page and login', async () => {
         await loginPage.goto();
-        await loginPage.login(STANDARD_USER.username, STANDARD_USER.password);
+        const customer = loadSignedUpUser();
+        await loginPage.login(customer.username, customer.password);
       });
 
       await test.step('Navigate to catalog and add a product', async () => {
@@ -126,7 +128,7 @@ test.describe('Shopping Cart Module', () => {
   });
 
   test.describe('@p3 FR-CART-004: Decrease Quantity', () => {
-    test('Login with Standard User - can decrease item quantity', async ({
+    test('Signed-up customer - can decrease item quantity', async ({
       loginPage,
       catalogPage,
       cartPage,
@@ -134,7 +136,8 @@ test.describe('Shopping Cart Module', () => {
     }) => {
       await test.step('Navigate to login page and login', async () => {
         await loginPage.goto();
-        await loginPage.login(STANDARD_USER.username, STANDARD_USER.password);
+        const customer = loadSignedUpUser();
+        await loginPage.login(customer.username, customer.password);
       });
 
       await test.step('Navigate to catalog and add a product', async () => {
@@ -179,7 +182,7 @@ test.describe('Shopping Cart Module', () => {
   });
 
   test.describe('@p3 FR-CART-005: Minimum Quantity Constraint', () => {
-    test('Login with Standard User - minus button disabled at quantity 1', async ({
+    test('Signed-up customer - minus button disabled at quantity 1', async ({
       loginPage,
       catalogPage,
       cartPage,
@@ -187,7 +190,8 @@ test.describe('Shopping Cart Module', () => {
     }) => {
       await test.step('Navigate to login page and login', async () => {
         await loginPage.goto();
-        await loginPage.login(STANDARD_USER.username, STANDARD_USER.password);
+        const customer = loadSignedUpUser();
+        await loginPage.login(customer.username, customer.password);
       });
 
       await test.step('Navigate to catalog and add a product', async () => {
@@ -215,7 +219,7 @@ test.describe('Shopping Cart Module', () => {
   });
 
   test.describe('@p2 FR-CART-007: Remove Single Item', () => {
-    test('Login with Standard User - can remove single item from cart', async ({
+    test('Signed-up customer - can remove single item from cart', async ({
       loginPage,
       catalogPage,
       cartPage,
@@ -223,7 +227,8 @@ test.describe('Shopping Cart Module', () => {
     }) => {
       await test.step('Navigate to login page and login', async () => {
         await loginPage.goto();
-        await loginPage.login(STANDARD_USER.username, STANDARD_USER.password);
+        const customer = loadSignedUpUser();
+        await loginPage.login(customer.username, customer.password);
       });
 
       await test.step('Navigate to catalog and add a product', async () => {
@@ -255,7 +260,7 @@ test.describe('Shopping Cart Module', () => {
   });
 
   test.describe('@p3 FR-CART-008: Clear Entire Cart', () => {
-    test('Login with Standard User - can clear all items from cart', async ({
+    test('Signed-up customer - can clear all items from cart', async ({
       loginPage,
       catalogPage,
       cartPage,
@@ -263,7 +268,8 @@ test.describe('Shopping Cart Module', () => {
     }) => {
       await test.step('Navigate to login page and login', async () => {
         await loginPage.goto();
-        await loginPage.login(STANDARD_USER.username, STANDARD_USER.password);
+        const customer = loadSignedUpUser();
+        await loginPage.login(customer.username, customer.password);
       });
 
       await test.step('Navigate to catalog and add multiple products', async () => {
@@ -294,7 +300,7 @@ test.describe('Shopping Cart Module', () => {
   });
 
   test.describe('@p1 FR-CART-010: Proceed to Checkout (Authenticated)', () => {
-    test('Login with Standard User - can proceed to checkout', async ({
+    test('Signed-up customer - can proceed to checkout', async ({
       loginPage,
       catalogPage,
       cartPage,
@@ -302,7 +308,8 @@ test.describe('Shopping Cart Module', () => {
     }) => {
       await test.step('Navigate to login page and login', async () => {
         await loginPage.goto();
-        await loginPage.login(STANDARD_USER.username, STANDARD_USER.password);
+        const customer = loadSignedUpUser();
+        await loginPage.login(customer.username, customer.password);
       });
 
       await test.step('Navigate to catalog and add a product', async () => {

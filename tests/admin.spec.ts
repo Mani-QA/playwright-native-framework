@@ -1,16 +1,17 @@
 import { test, expect } from '../src/fixtures/pomFixtures';
-import { STANDARD_USER, ADMIN_USER, ORDER_STATUSES } from '../src/test-data';
+import { loadSignedUpUser, ADMIN_USER, ORDER_STATUSES } from '../src/test-data';
 
 test.describe('Admin Dashboard Module', () => {
   test.describe('@p2 FR-ADM-001: Admin Access Control', () => {
-    test('Login with Standard User - cannot access admin dashboard', async ({
+    test('Signed-up customer - cannot access admin dashboard', async ({
       loginPage,
       adminPage,
       page,
     }) => {
       await test.step('Navigate to login page and login as standard user', async () => {
         await loginPage.goto();
-        await loginPage.login(STANDARD_USER.username, STANDARD_USER.password);
+        const customer = loadSignedUpUser();
+        await loginPage.login(customer.username, customer.password);
       });
 
       await test.step('Navigate to admin page', async () => {
@@ -25,10 +26,11 @@ test.describe('Admin Dashboard Module', () => {
   });
 
   test.describe('@p3 FR-ADM-002: Admin Link Visibility', () => {
-    test('Login with Standard User - admin link not visible', async ({ loginPage, navBar }) => {
+    test('Signed-up customer - admin link not visible', async ({ loginPage, navBar }) => {
       await test.step('Navigate to login page and login as standard user', async () => {
         await loginPage.goto();
-        await loginPage.login(STANDARD_USER.username, STANDARD_USER.password);
+        const customer = loadSignedUpUser();
+        await loginPage.login(customer.username, customer.password);
       });
 
       await test.step('Verify Admin button is NOT visible in navbar', async () => {

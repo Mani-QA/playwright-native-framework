@@ -333,7 +333,7 @@ export const STANDARD_USER = {
 
 export const ADMIN_USER = {
   username: 'admin_user',
-  password: 'admin123',
+  password: '$Admin<ddmmyyyy>',
   displayName: 'admin_user',
 };
 
@@ -637,12 +637,9 @@ See [docs/github-pages-setup.md](docs/github-pages-setup.md) for detailed setup 
 
 ### Storage State Authentication
 
-The framework uses Playwright's storage state feature to avoid logging in for every test:
+Global setup creates a new customer through `/api/auth/signup` and saves that login in `playwright/.auth/customer.json`. Cart, checkout, order, navigation, and API tests sign in with that account. The signup specs register additional visitors so they can check the form without sharing state with the rest of the suite.
 
-1. `auth.setup.ts` runs first and saves authenticated sessions
-2. Other tests reuse the saved session via `storageState`
-
-This dramatically speeds up test execution.
+`auth.setup.ts` then signs in as that customer, and as the admin user, and saves storage state. Admin password is `$Admin` plus today's date as `DDMMYYYY`.
 
 ---
 

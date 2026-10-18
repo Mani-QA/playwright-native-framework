@@ -127,7 +127,7 @@ The QADemo e-commerce application provides a complete checkout flow that include
 |------|----------|----------|
 | Standard | standard_user | standard123 |
 | Locked | locked_user | locked123 |
-| Admin | admin_user | admin123 |
+| Admin | admin_user | `$Admin` + today's date as DDMMYYYY |
 
 ### Payment Cards
 | Type | Number | Expiry | CVV |

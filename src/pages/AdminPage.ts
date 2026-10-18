@@ -55,10 +55,9 @@ export class AdminPage {
     this.pageHeading = page.getByRole('heading', { name: /Admin Dashboard/i, level: 1 });
     this.accessDeniedMessage = page.getByText(/Access Denied|Forbidden|Unauthorized/i);
 
-    // Tabs (implemented as buttons, not tab role)
-    this.overviewTab = page.getByRole('button', { name: /Overview/i });
-    this.productsTab = page.getByRole('button', { name: /Products/i });
-    this.ordersTab = page.getByRole('button', { name: /Orders/i });
+    this.overviewTab = page.getByRole('tab', { name: 'Overview' });
+    this.productsTab = page.getByRole('tab', { name: 'Products', exact: true });
+    this.ordersTab = page.getByRole('tab', { name: 'Orders', exact: true });
 
     // Overview Statistics - each stat card has a label paragraph and a value paragraph
     this.productsCount = page.locator('p').filter({ hasText: 'Products' }).locator('..').locator('p').nth(1);

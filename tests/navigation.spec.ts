@@ -1,5 +1,5 @@
 import { test, expect } from '../src/fixtures/pomFixtures';
-import { STANDARD_USER } from '../src/test-data';
+import { loadSignedUpUser } from '../src/test-data';
 
 test.describe('Navigation & Layout Module', () => {
   test.describe('@p1 FR-NAV-001: Logo Navigation', () => {
@@ -35,7 +35,7 @@ test.describe('Navigation & Layout Module', () => {
   });
 
   test.describe('@p3 FR-NAV-003: Cart Icon with Badge', () => {
-    test('Login with Standard User - cart icon shows item count after adding product', async ({
+    test('Signed-up customer - cart icon shows item count after adding product', async ({
       loginPage,
       catalogPage,
       navBar,
@@ -43,7 +43,8 @@ test.describe('Navigation & Layout Module', () => {
     }) => {
       await test.step('Navigate to login page and login', async () => {
         await loginPage.goto();
-        await loginPage.login(STANDARD_USER.username, STANDARD_USER.password);
+        const customer = loadSignedUpUser();
+        await loginPage.login(customer.username, customer.password);
       });
 
       await test.step('Navigate to catalog', async () => {
@@ -70,7 +71,7 @@ test.describe('Navigation & Layout Module', () => {
       });
     });
 
-    test('Login with Standard User - clicking cart icon navigates to cart', async ({
+    test('Signed-up customer - clicking cart icon navigates to cart', async ({
       loginPage,
       catalogPage,
       navBar,
@@ -78,7 +79,8 @@ test.describe('Navigation & Layout Module', () => {
     }) => {
       await test.step('Navigate to login page and login', async () => {
         await loginPage.goto();
-        await loginPage.login(STANDARD_USER.username, STANDARD_USER.password);
+        const customer = loadSignedUpUser();
+        await loginPage.login(customer.username, customer.password);
       });
 
       await test.step('Navigate to catalog', async () => {
@@ -101,8 +103,9 @@ test.describe('Navigation & Layout Module', () => {
         await homePage.goto();
       });
 
-      await test.step('Verify Sign In button is visible', async () => {
+      await test.step('Verify Sign In and Create Account are visible', async () => {
         await expect(navBar.signInButton).toBeVisible();
+        await expect(navBar.signUpButton).toBeVisible();
       });
     });
 
@@ -122,13 +125,14 @@ test.describe('Navigation & Layout Module', () => {
   });
 
   test.describe('@p3 FR-NAV-005: User Menu (Authenticated)', () => {
-    test('Login with Standard User - shows username and logout button', async ({
+    test('Signed-up customer - shows username and logout button', async ({
       loginPage,
       navBar,
     }) => {
       await test.step('Navigate to login page and login', async () => {
         await loginPage.goto();
-        await loginPage.login(STANDARD_USER.username, STANDARD_USER.password);
+        const customer = loadSignedUpUser();
+        await loginPage.login(customer.username, customer.password);
       });
 
       await test.step('Verify logout button is visible', async () => {
@@ -167,9 +171,9 @@ test.describe('Navigation & Layout Module', () => {
         await homePage.goto();
       });
 
-      await test.step('Verify Sign In link is visible for guests', async () => {
-        const isSignInVisible = await footer.isSignInVisible();
-        expect(isSignInVisible).toBeTruthy();
+      await test.step('Verify Sign In and Create Account links are visible for guests', async () => {
+        await expect(footer.signInLink).toBeVisible();
+        await expect(footer.createAccountLink).toBeVisible();
       });
     });
   });

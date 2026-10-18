@@ -13,7 +13,7 @@
  */
 
 import { test, expect } from '../src/fixtures/pomFixtures';
-import { STANDARD_USER } from '../src/test-data';
+import { ADMIN_USER, loadSignedUpUser } from '../src/test-data';
 
 test.describe('@agent Seed Tests for Agent Exploration', () => {
   test('seed - unauthenticated exploration', async ({
@@ -52,10 +52,11 @@ test.describe('@agent Seed Tests for Agent Exploration', () => {
     checkoutPage,
     navBar,
   }) => {
-    // Login with standard user
-    await test.step('Login with standard user', async () => {
+    // Login with the customer created during signup setup
+    await test.step('Login with the signed-up customer', async () => {
+      const customer = loadSignedUpUser();
       await loginPage.goto();
-      await loginPage.login(STANDARD_USER.username, STANDARD_USER.password);
+      await loginPage.login(customer.username, customer.password);
       await expect(page).toHaveURL(/catalog/);
       await expect(navBar.logoutButton).toBeVisible();
     });
@@ -105,7 +106,7 @@ test.describe('@agent Seed Tests for Agent Exploration', () => {
     // Login with admin user
     await test.step('Login with admin user', async () => {
       await loginPage.goto();
-      await loginPage.login('admin_user', 'admin123');
+      await loginPage.login(ADMIN_USER.username, ADMIN_USER.password);
       await expect(page).toHaveURL(/catalog/);
     });
 

@@ -17,7 +17,7 @@ This test plan covers the complete user journey in the QADemo e-commerce applica
 | Persona | Username | Password | Description |
 |---------|----------|----------|-------------|
 | Standard User | standard_user | standard123 | Regular customer with full access |
-| Admin User | admin_user | admin123 | Administrator with order management access |
+| Admin User | admin_user | `$Admin` + today's date as DDMMYYYY | Administrator with order management access |
 
 ## Test Scenarios
 
@@ -227,7 +227,7 @@ This test plan covers the complete user journey in the QADemo e-commerce applica
 
 **Phase 1: Admin Login**
 1. Log out if currently logged in
-2. Log in as `admin_user` / `admin123`
+2. Log in as `admin_user` / `$Admin<ddmmyyyy>`
 3. Verify admin navigation link is visible
 
 **Phase 2: Verify Order in Admin Dashboard**

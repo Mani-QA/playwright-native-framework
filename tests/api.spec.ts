@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { STANDARD_USER, ADMIN_USER } from '../src/test-data';
+import { loadSignedUpUser, ADMIN_USER } from '../src/test-data';
 import { randomUUID } from 'crypto';
 
 /**
@@ -26,11 +26,12 @@ test.describe('API Testing - E2E Order Flow with Admin Operations', () => {
 
   test.describe('@API @p1 FR-API-001: Standard User Authentication and Order Flow', () => {
     test('Login as Standard User and save access token', async ({ request }) => {
-      await test.step('Login with standard user credentials', async () => {
+      await test.step('Login with the signed-up customer', async () => {
+        const customer = loadSignedUpUser();
         const loginResponse = await request.post(`${baseURL}/auth/login`, {
           data: {
-            username: STANDARD_USER.username,
-            password: STANDARD_USER.password,
+            username: customer.username,
+            password: customer.password,
           },
         });
 
@@ -41,7 +42,8 @@ test.describe('API Testing - E2E Order Flow with Admin Operations', () => {
         expect(responseBody.success).toBe(true);
         expect(responseBody.data).toHaveProperty('accessToken');
         expect(responseBody.data).toHaveProperty('user');
-        expect(responseBody.data.user.username).toBe(STANDARD_USER.username);
+        expect(responseBody.data.user.username).toBe(customer.username);
+        expect(responseBody.data.user.email).toBe(customer.email);
         expect(responseBody.data.user.userType).toBe('standard');
 
         // Save access token for subsequent requests

@@ -8,6 +8,9 @@ export default defineConfig({
   // Test directory
   testDir: './tests',
 
+  // Create the shared customer account before any project starts
+  globalSetup: './global-setup.ts',
+
   // Run tests in files in parallel
   fullyParallel: true,
 

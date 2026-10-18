@@ -9,10 +9,20 @@ export {
   STANDARD_USER,
   LOCKED_USER,
   ADMIN_USER,
+  getAdminPassword,
   ALL_USERS,
   INVALID_CREDENTIALS,
   EMPTY_CREDENTIALS,
 } from './users';
+
+export {
+  type SignupAccount,
+  SIGNUP_PASSWORD,
+  SIGNED_UP_USER_FILE,
+  createSignupAccount,
+  saveSignedUpUser,
+  loadSignedUpUser,
+} from './signedUpUser';
 
 // Checkout test data
 export {
@@ -35,6 +45,7 @@ export {
 export const URLS = {
   home: '/',
   login: '/login',
+  signup: '/signup',
   catalog: '/catalog',
   cart: '/cart',
   checkout: '/checkout',
@@ -46,6 +57,18 @@ export const URLS = {
 export const ERROR_MESSAGES = {
   invalidCredentials: 'Invalid username or password',
   accountLocked: 'Account is locked',
+  emailRequired: 'Email address is required',
+  phoneRequired: 'Phone number is required',
+  passwordRequired: 'Password is required',
+  passwordTooShort: 'Password must be at least 8 characters',
+  confirmPasswordRequired: 'Please confirm your password',
+  passwordsDoNotMatch: 'Passwords do not match',
+  invalidEmail: 'Please enter a valid email address',
+  phoneTooShort: 'Phone number must be at least 7 digits',
+  usernameTooShort: 'Username must be at least 3 characters',
+  passwordNeedsUppercase: 'Password must contain at least one uppercase letter',
+  emailExists: 'An account with this email address already exists. Please sign in instead.',
+  usernameTaken: 'This username is already taken. Please choose another username.',
   emptyCart: 'Your cart is empty',
   invalidCardNumber: 'Invalid card number. Please check and try again.',
   outOfStock: 'is out of stock',

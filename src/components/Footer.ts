@@ -9,6 +9,7 @@ export class Footer {
   readonly footer: Locator;
   readonly productsLink: Locator;
   readonly signInLink: Locator;
+  readonly createAccountLink: Locator;
   readonly cartLink: Locator;
 
   constructor(page: Page) {
@@ -19,7 +20,8 @@ export class Footer {
 
     // Footer links
     this.productsLink = this.footer.getByRole('link', { name: 'Products' });
-    this.signInLink = this.footer.getByRole('link', { name: /Sign In/i });
+    this.signInLink = this.footer.getByRole('link', { name: 'Sign In', exact: true });
+    this.createAccountLink = this.footer.getByRole('link', { name: 'Create Account' });
     this.cartLink = this.footer.getByRole('link', { name: /Cart/i });
   }
 

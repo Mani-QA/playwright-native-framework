@@ -1,5 +1,5 @@
 import { test, expect } from '../src/fixtures/pomFixtures';
-import { STANDARD_USER, VALID_CHECKOUT_DATA } from '../src/test-data';
+import { loadSignedUpUser, VALID_CHECKOUT_DATA } from '../src/test-data';
 
 /**
  * Helper function to add a product to cart and wait for cart state to sync
@@ -38,7 +38,7 @@ test.describe('Order Management Module', () => {
   });
 
   test.describe('@p2 FR-ORD-002: Orders List Display', () => {
-    test('Login with Standard User - orders page displays order history after placing order', async ({
+    test('Signed-up customer - orders page displays order history after placing order', async ({
       loginPage,
       catalogPage,
       cartPage,
@@ -48,7 +48,8 @@ test.describe('Order Management Module', () => {
     }) => {
       await test.step('Navigate to login page and login', async () => {
         await loginPage.goto();
-        await loginPage.login(STANDARD_USER.username, STANDARD_USER.password);
+        const customer = loadSignedUpUser();
+        await loginPage.login(customer.username, customer.password);
       });
 
       await test.step('Add a product to cart', async () => {
@@ -82,13 +83,14 @@ test.describe('Order Management Module', () => {
   });
 
   test.describe('@p3 FR-ORD-003: Empty Orders State', () => {
-    test('Login with Standard User - orders page displays correctly', async ({
+    test('Signed-up customer - orders page displays correctly', async ({
       loginPage,
       ordersPage,
     }) => {
       await test.step('Navigate to login page and login', async () => {
         await loginPage.goto();
-        await loginPage.login(STANDARD_USER.username, STANDARD_USER.password);
+        const customer = loadSignedUpUser();
+        await loginPage.login(customer.username, customer.password);
       });
 
       await test.step('Navigate to orders page', async () => {
@@ -114,7 +116,7 @@ test.describe('Order Management Module', () => {
   });
 
   test.describe('@p3 FR-ORD-004: Navigate to Order Detail', () => {
-    test('Login with Standard User - clicking order navigates to detail page', async ({
+    test('Signed-up customer - clicking order navigates to detail page', async ({
       loginPage,
       catalogPage,
       cartPage,
@@ -124,7 +126,8 @@ test.describe('Order Management Module', () => {
     }) => {
       await test.step('Navigate to login page and login', async () => {
         await loginPage.goto();
-        await loginPage.login(STANDARD_USER.username, STANDARD_USER.password);
+        const customer = loadSignedUpUser();
+        await loginPage.login(customer.username, customer.password);
       });
 
       await test.step('Add a product and complete checkout', async () => {
@@ -154,14 +157,15 @@ test.describe('Order Management Module', () => {
   });
 
   test.describe('@p4 FR-ORD-005: Username Navigation to Orders', () => {
-    test('Login with Standard User - clicking username navigates to orders', async ({
+    test('Signed-up customer - clicking username navigates to orders', async ({
       loginPage,
       navBar,
       page,
     }) => {
       await test.step('Navigate to login page and login', async () => {
         await loginPage.goto();
-        await loginPage.login(STANDARD_USER.username, STANDARD_USER.password);
+        const customer = loadSignedUpUser();
+        await loginPage.login(customer.username, customer.password);
       });
 
       await test.step('Click on username in navbar', async () => {
@@ -175,7 +179,7 @@ test.describe('Order Management Module', () => {
   });
 
   test.describe('@p2 FR-ORD-006: Order Confirmation Display', () => {
-    test('Login with Standard User - order confirmation shows order details', async ({
+    test('Signed-up customer - order confirmation shows order details', async ({
       loginPage,
       catalogPage,
       cartPage,
@@ -185,7 +189,8 @@ test.describe('Order Management Module', () => {
     }) => {
       await test.step('Navigate to login page and login', async () => {
         await loginPage.goto();
-        await loginPage.login(STANDARD_USER.username, STANDARD_USER.password);
+        const customer = loadSignedUpUser();
+        await loginPage.login(customer.username, customer.password);
       });
 
       await test.step('Add a product and complete checkout', async () => {
@@ -219,13 +224,14 @@ test.describe('Order Management Module', () => {
   });
 
   test.describe('@p4 FR-ORD-008: Order Access Control', () => {
-    test('Login with Standard User - accessing non-existent order shows 404', async ({
+    test('Signed-up customer - accessing non-existent order shows 404', async ({
       loginPage,
       orderDetailPage,
     }) => {
       await test.step('Navigate to login page and login', async () => {
         await loginPage.goto();
-        await loginPage.login(STANDARD_USER.username, STANDARD_USER.password);
+        const customer = loadSignedUpUser();
+        await loginPage.login(customer.username, customer.password);
       });
 
       await test.step('Navigate to non-existent order', async () => {
