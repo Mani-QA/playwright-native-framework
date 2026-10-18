@@ -108,6 +108,11 @@ export default defineConfig({
       name: 'chromium',
       use: {
         ...devices['Desktop Chrome'],
+        // QADemo registers WebMCP tools on document.modelContext. Chromium only exposes them with this flag.
+        // https://playwright.dev/docs/api/class-webmcp
+        launchOptions: {
+          args: ['--enable-features=WebMCP'],
+        },
       },
       dependencies: ['setup'],
     },

@@ -28,6 +28,8 @@ const NEGATIVE_REQUIREMENTS = new Set([
   'FR-ORD-008',
   'FR-CART-011',
   'FR-PROD-011',
+  'FR-MCP-004',
+  'FR-MCP-007',
 ]);
 
 function loadToken() {
@@ -264,6 +266,9 @@ function preconditions(testCase) {
   }
   if (testCase.fileName === 'api.spec.ts') {
     lines.push('Exercise the HTTPS API directly. Do not drive the browser.');
+  }
+  if (testCase.fileName === 'webmcp.spec.ts') {
+    lines.push('Launch Chromium with --enable-features=WebMCP and call the store tools through the page WebMCP API.');
   }
   if (testCase.skipped) {
     lines.push('This test is marked test.skip in the spec and does not run in the default suite.');

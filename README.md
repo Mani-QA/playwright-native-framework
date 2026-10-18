@@ -125,7 +125,8 @@ playwright/
 │   ├── orders.spec.ts       # Order management tests
 │   ├── admin.spec.ts        # Admin dashboard tests
 │   ├── navigation.spec.ts   # Navigation/layout tests
-│   └── api.spec.ts          # REST API tests
+│   ├── api.spec.ts          # REST API tests
+│   └── webmcp.spec.ts       # WebMCP store-tool tests
 │
 ├── playwright.config.ts     # Playwright configuration
 ├── tsconfig.json            # TypeScript configuration

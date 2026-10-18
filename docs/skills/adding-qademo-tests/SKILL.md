@@ -69,6 +69,14 @@ Empty signup password says `Password is required`. The 8-character message appea
 
 A second `signup()` call returns immediately if the alert from the first rejection is still visible. Clear the form, or submit with `fillForm` and `clickCreateAccount`, before asserting the next error.
 
+## WebMCP
+
+QADemo registers store tools on `document.modelContext`. Playwright reads and calls them with `page.webmcp` ([WebMCP](https://playwright.dev/docs/api/class-webmcp)). The Chromium project launches with `--enable-features=WebMCP`. Without that flag, `page.webmcp.tools()` throws.
+
+Tests live in `tests/webmcp.spec.ts`. Use `createSignupAccount()` for any tool that signs in or changes a cart. Do not use the shared customer, and do not write `playwright/.auth/customer.json`. Assert the tool result in the spec. Assert the page only after `open_page`.
+
+A failed tool returns `{ ok: false, error: { code, message } }`. An unknown tool name throws. Negative requirements for the Qase push script are `FR-MCP-004` and `FR-MCP-007`.
+
 ## Publish spec cases to Qase
 
 Project code `QADEMO`. Two suites:
