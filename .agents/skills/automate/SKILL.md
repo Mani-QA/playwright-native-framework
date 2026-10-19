@@ -19,19 +19,26 @@ Read `docs/kb/pom-index.md` and `docs/kb/app-map.md`.
 
 - Use the fixture that already owns the route.
 - Call an existing method when it performs the action.
+- Leave an existing method's waited URL, locator, and clicked control as they are. A guest who should land on login gets a new method. The spec asserts that URL.
 - Add a method on that class only when no method does the action. The method returns `Promise<void>` and contains no `expect()`.
 - Create `src/pages/<Feature>Page.ts` only when the route has no class. Register it on `src/fixtures/pomFixtures.ts`.
-- Discover a new locator with Playwright MCP `browser_snapshot` on `https://qademo.com`. Prefer `getByRole`, then `getByLabel`, then `getByPlaceholder`.
+- Discover a new locator with Playwright MCP `browser_snapshot` on `https://qademo.com`. Use `getByRole`, then `getByLabel`, then `getByPlaceholder`.
+- One locator names one action. An "In Cart" control stays separate from "Remove from cart".
+- Do not edit `src/qase/**` or `qaseCaseId` in `src/fixtures/pomFixtures.ts`. The matcher already accepts `FR-` and `TC-` ids. The case map keeps QADemo Automation titles ahead of the eCommerce suite.
 
 ## 3. Write the spec
 
 Add the test to the spec file in `app-map.md`. Import `{ test, expect }` from `../src/fixtures/pomFixtures`.
 
 - Describe tag: `@p1`, `@p2`, or `@p3` from Qase priority 1, 2, or 3.
-- When the title is `FR-XXX-000: <test title>`, the describe contains `FR-XXX-000` and the `test()` title is `<test title>`.
+- When the title is `FR-XXX-000: <test title>` or `TC-E2E-000: <test title>`, the describe contains that id and the `test()` title is the text after the colon.
+- The payload `harness.action` is `create` or `update`. For `update`, edit the test in `harness.spec`. Add a `test.step` and `expect` for each entry in `harness.changes.added`. Remove steps listed in `harness.changes.removed` only when the case no longer contains them. Keep steps that still match.
+- Do not add a second `test()` with the same title.
 - Each Qase action is a `test.step`.
 - Each expected result, plus every gap-fill check from `product-knowledge.md`, is an `expect()` in the spec.
-- Sign in with the persona from `domain-glossary.md`. Call `loadSignedUpUser()` inside the test.
+- A new shopper comes from `createSignupAccount()` with its generated email, phone, and username. Call `loadSignedUpUser()` inside the test only for the shared customer.
+- Checkout uses `VALID_CHECKOUT_DATA`, `VALID_SHIPPING`, and `VALID_PAYMENT` from `src/test-data`. After placing an order, assert the confirmation shows the card's last four digits and does not show the full card number.
+- Submit through the page-object method. Do not click a heading to move focus.
 
 ## 4. Verify
 
@@ -44,8 +51,8 @@ Add the test to the spec file in `app-map.md`. Import `{ test, expect }` from `.
 ## 5. Pull request
 
 1. `npm run index:pom`
-2. Branch `automate/qase-<id>` from the current HEAD.
-3. Commit the spec, page objects, fixture, and `docs/kb/pom-index.md` with message `feat(tests): automate Qase case QADEMO-<id>`.
+2. Branch `harness.branch` from the current HEAD.
+3. Commit the spec, page objects, fixture, `docs/kb/pom-index.md`, and `.agents/harness-state.json`. The snapshot file is already updated. Do not revert it. Message: `feat(tests): automate Qase case QADEMO-<id>` for create, or `test: update QADEMO-<id> from the latest Qase steps` for update.
 4. `git push -u origin HEAD`
-5. `gh pr create` with title `feat(e2e): Automate QADEMO-<id> - <case title>` and a body that links `https://app.qase.io/case/QADEMO-<id>` and `https://app.qase.io/run/QADEMO/dashboard/1`.
+5. If `gh pr list --head <harness.branch> --state open` already shows a pull request, use that URL. Otherwise `gh pr create` with title `feat(e2e): Automate QADEMO-<id> - <case title>` and a body that links `https://app.qase.io/case/QADEMO-<id>` and `https://app.qase.io/run/QADEMO/dashboard/1`.
 6. Reply with a final line `PR_URL: <url>`.

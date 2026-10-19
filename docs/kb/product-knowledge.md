@@ -5,7 +5,8 @@ Read `docs/FRD-QADemo.md` before writing a spec. A Qase case is often shorter th
 ## Always
 
 - Import `test` and `expect` from `src/fixtures/pomFixtures`.
-- Reuse the page object and method already listed in `docs/kb/pom-index.md`. Add a method only when none of the existing methods perform that action.
+- Reuse the page object and method already listed in `docs/kb/pom-index.md`. Add a method only when none of the existing methods perform that action. Leave an existing method's URL and locator unchanged.
+- A new shopper uses `createSignupAccount()` as returned. Checkout uses `VALID_CHECKOUT_DATA`. The order page shows the last four digits of `VALID_PAYMENT.cardNumber`.
 - Assert with web-first matchers. Do not use `waitForTimeout` or `networkidle`.
 - Tag the describe `@p1`, `@p2`, or `@p3` from the Qase priority (`1` high, `2` medium, `3` low).
 - Field errors are text under the field. API failures use `role="alert"`.

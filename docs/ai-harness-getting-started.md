@@ -27,6 +27,8 @@ npm run harness -- --case 91
 
 A full run refuses to start when the git worktree is dirty. The agent then branches as `automate/qase-<id>`, pushes, and opens a pull request. The last log line contains the pull request URL.
 
+Sending the same case id again compares the Qase title, preconditions, and steps, plus the harness instruction files, with `.agents/harness-state.json`. An unchanged case is skipped. Edited Qase steps or edited harness instructions update the existing spec and open a pull request. The first time an existing spec has no snapshot, the harness records a baseline and leaves the spec as it is.
+
 A suite or plan is limited to one case unless you raise the limit:
 
 ```bash
