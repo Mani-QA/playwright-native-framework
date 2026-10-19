@@ -34,10 +34,15 @@ Add the test to the spec file in `app-map.md`. Import `{ test, expect }` from `.
 - When the title is `FR-XXX-000: <test title>` or `TC-E2E-000: <test title>`, the describe contains that id and the `test()` title is the text after the colon.
 - The payload `harness.action` is `create` or `update`. For `update`, edit the test in `harness.spec`. Add a `test.step` and `expect` for each entry in `harness.changes.added`. Remove steps listed in `harness.changes.removed` only when the case no longer contains them. Keep steps that still match.
 - Do not add a second `test()` with the same title.
-- Each Qase action is a `test.step`.
-- Each expected result, plus every gap-fill check from `product-knowledge.md`, is an `expect()` in the spec.
+- Each Qase action is a `test.step`. The values submitted in that step are the values named in its title.
+- Each expected result, plus every gap-fill check from `product-knowledge.md`, is a web-first `expect()` in the spec. Use `expect(page).toHaveURL`. Do not add `expect(page.url())` for a URL the previous assertion already settled.
 - A new shopper comes from `createSignupAccount()` with its generated email, phone, and username. Call `loadSignedUpUser()` inside the test only for the shared customer.
-- Checkout uses `VALID_CHECKOUT_DATA`, `VALID_SHIPPING`, and `VALID_PAYMENT` from `src/test-data`. After placing an order, assert the confirmation shows the card's last four digits and does not show the full card number.
+- When the case names `standard_user` or the shared customer and says the cart is empty, open the cart and clear it before adding the product. That account is shared, so a leftover line would make the quantity assertion wrong.
+- When the case names a shopper, address, or cardholder, pass those strings to the page object and assert them on the order. Use `VALID_PAYMENT` for the card number and CVV. Use the case expiry when it is a future `MM/YY`; otherwise use `VALID_PAYMENT.expiryDate`.
+- After an order, assert the payment text contains the last four digits and the main content does not contain the full card number. Do not assert that the letters `CVV` are absent.
+- Open a product through its heading, then read the slug from `page.url()`. Do not call `getAttribute`.
+- An in-cart control shows the quantity this test added, such as `In Cart (1)`.
+- A stock check records the count on that product page, purchases the case quantity, reloads that same product, and asserts the difference. Do not copy a stock number out of the case text.
 - Submit through the page-object method. Do not click a heading to move focus.
 
 ## 4. Verify
