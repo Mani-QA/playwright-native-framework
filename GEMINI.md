@@ -19,7 +19,7 @@ The Qase case title stays unchanged. Shape the describe and `test()` title so th
 
 Leave existing page-object methods unchanged. Add a method when the outcome differs, such as a guest checkout that lands on login. Locators come from a snapshot and use `getByRole`, `getByLabel`, or `getByPlaceholder`. Do not edit `src/qase/**` or the Qase matcher.
 
-Use `createSignupAccount()` unchanged and `VALID_CHECKOUT_DATA` for checkout. Assert the order shows the card's last four digits.
+Use `createSignupAccount()` unchanged for a new shopper. Clear a shared account cart when the case says the cart is empty. Submit and assert the shipping and cardholder values named in the case. Use `VALID_PAYMENT` for the card number, expiry, and CVV, and assert the last four digits. Read a product slug from the page URL. A stock check uses the count recorded in that same test.
 
 When the case payload says `harness.action` is `update`, edit the existing test in `harness.spec`. Add steps and assertions for Qase steps that were added or edited, and for harness instructions the test does not cover yet. Keep the same `test()` title. When the action is `create`, add the test once.
 

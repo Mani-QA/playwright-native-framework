@@ -6,7 +6,7 @@
 | :--- | :--- | :--- |
 | Shopper, customer, signed-in user, buyer | Shared customer from global setup | `loadSignedUpUser()` inside the test, then `loginPage.login` |
 | New visitor, signup, create account | Fresh account | `createSignupAccount()`. Do not write `playwright/.auth/customer.json` |
-| Standard user, seeded login | `standard_user` / `standard123` | Only the seeded login test |
+| Standard user, seeded login | `standard_user` / `standard123` | The seeded login test, and a case that names this account. Clear the cart before adding a product |
 | Locked user | `locked_user` / `locked123` | Locked-login rejection |
 | Admin, administrator | `admin_user` | Password is `$Admin` plus the local date as `DDMMYYYY` (`getAdminPassword()`) |
 | Guest, signed out | No account | Do not apply storage state. Chromium starts signed out |

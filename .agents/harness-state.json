@@ -1,0 +1,45 @@
+{
+  "instructionsHash": "31486f0be1cf154340fc13877698af062235081ac40c6119051ea37e41592e32",
+  "cases": {
+    "2": {
+      "caseHash": "4bf4b729dd7cb975ff3699da47ec59507007dde87874baab1ff086112a56d74b",
+      "instructionsHash": "31486f0be1cf154340fc13877698af062235081ac40c6119051ea37e41592e32",
+      "spec": "",
+      "title": "TC-E2E-002: Login as an existing user and complete checkout",
+      "steps": [
+        {
+          "action": "Open the login page.",
+          "expected_result": "Welcome Back is shown with Username or Email, Password, and Sign In."
+        },
+        {
+          "action": "Enter username standard_user and password standard123. Click Sign In.",
+          "expected_result": "The Product Catalog opens. The navbar shows standard_user and does not show Sign In."
+        },
+        {
+          "action": "Open an in-stock product. Record its name, price, and stock count as Product B. Click Add to Cart.",
+          "expected_result": "The button changes to In Cart (1). The cart badge shows 1."
+        },
+        {
+          "action": "Open the cart.",
+          "expected_result": "The cart contains only Product B with quantity 1. Shipping is Free. The total equals Product B's price."
+        },
+        {
+          "action": "Click Proceed to Checkout.",
+          "expected_result": "Checkout opens immediately. The shopper is not sent back to login."
+        },
+        {
+          "action": "Enter first name Jordan, last name Lee, and address 500 Market Street, Seattle, WA 98101. Enter card 4242 4242 4242 4242, expiry 12/30, CVV 123, and name on card Jordan Lee. Click Place Order.",
+          "expected_result": "Order Confirmed opens for a new order. Status is Pending. Shipping shows Jordan Lee and the entered address. The only item is Product B and the total matches the cart. The card number and CVV are not displayed."
+        },
+        {
+          "action": "Click the username in the navbar.",
+          "expected_result": "My Orders opens with Welcome back, standard_user. The new order is listed with status Pending and the same total."
+        },
+        {
+          "action": "Open that order, then return to Product B's product page.",
+          "expected_result": "The order detail repeats the order number, Pending status, item, and total. Product B's stock is one less than the count recorded before checkout."
+        }
+      ]
+    }
+  }
+}

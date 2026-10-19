@@ -4,6 +4,8 @@ import {
   createSignupAccount,
   VALID_CHECKOUT_DATA,
   INVALID_CARD_NUMBER,
+  STANDARD_USER,
+  VALID_PAYMENT,
 } from '../src/test-data';
 
 /**
@@ -477,6 +479,176 @@ test.describe('Checkout Module', () => {
         await expect(orderRow).toContainText(productAPrice);
         const orderCount = await ordersPage.getOrderCount();
         expect(orderCount).toBe(1);
+      });
+    });
+  });
+
+  test.describe('@p1 TC-E2E-002: Login as an existing user and complete checkout', () => {
+    test('Login as an existing user and complete checkout', async ({
+      catalogPage,
+      productDetailPage,
+      cartPage,
+      loginPage,
+      checkoutPage,
+      orderDetailPage,
+      ordersPage,
+      navBar,
+      page,
+    }) => {
+      let productBName = '';
+      let productBPrice = '';
+      let productBSlug = '';
+      let initialStockCount = 0;
+      let orderId = '';
+
+      await test.step('Open the login page.', async () => {
+        await loginPage.goto();
+        await expect(loginPage.heading).toBeVisible();
+        await expect(loginPage.usernameInput).toBeVisible();
+        await expect(loginPage.passwordInput).toBeVisible();
+        await expect(loginPage.signInButton).toBeVisible();
+      });
+
+      await test.step('Enter username standard_user and password standard123. Click Sign In.', async () => {
+        await loginPage.login(STANDARD_USER.username, STANDARD_USER.password);
+        await expect(page).toHaveURL(/\/catalog/);
+        await expect(catalogPage.pageHeading).toBeVisible();
+        await expect(
+          page.getByRole('navigation').getByRole('link', { name: new RegExp(STANDARD_USER.username, 'i') })
+        ).toBeVisible();
+        await expect(navBar.signInButton).not.toBeVisible();
+      });
+
+      await test.step('Ensure the shared cart is empty before adding a product.', async () => {
+        await navBar.clickCart();
+        await expect(page).toHaveURL(/\/cart/);
+        if (await cartPage.clearCartButton.isVisible()) {
+          await cartPage.clearCart();
+          await expect(cartPage.emptyCartMessage).toBeVisible();
+        }
+        await catalogPage.gotoViaNavbar();
+        await expect(page).toHaveURL(/\/catalog/);
+      });
+
+      await test.step('Open an in-stock product. Record its name, price, and stock count as Product B. Click Add to Cart.', async () => {
+        const inStockCard = catalogPage.productCards.filter({ hasNotText: 'Out of Stock' }).first();
+        await expect(inStockCard).toBeVisible();
+        await inStockCard.getByRole('heading').click();
+        await expect(page).toHaveURL(/\/products\//);
+
+        productBSlug = page.url().split('/products/')[1].split(/[?#]/)[0];
+        expect(productBSlug).toBeTruthy();
+
+        await expect(productDetailPage.productName).toBeVisible();
+        productBName = (await productDetailPage.getProductNameText()).trim();
+        productBPrice = (await productDetailPage.getProductPriceText()).trim();
+        expect(productBName).toBeTruthy();
+        expect(productBPrice).toMatch(/^\$\d+\.\d{2}$/);
+
+        await expect(productDetailPage.addToCartButton).toBeVisible();
+        await expect(productDetailPage.addToCartButton).toBeEnabled();
+        await expect(productDetailPage.stockAvailability).toBeVisible();
+        const stockText = await productDetailPage.stockAvailability.textContent() ?? '';
+        const stockMatch = stockText.match(/\d+/);
+        initialStockCount = stockMatch ? parseInt(stockMatch[0], 10) : 0;
+        expect(initialStockCount).toBeGreaterThan(0);
+
+        await productDetailPage.addToCart();
+        await expect(productDetailPage.inCartButton).toBeVisible();
+        await expect(productDetailPage.inCartButton).toContainText('In Cart (1)');
+        await navBar.waitForCartItemCount(1);
+        const cartCount = await navBar.getCartItemCount();
+        expect(cartCount).toBe(1);
+      });
+
+      await test.step('Open the cart.', async () => {
+        await navBar.clickCart();
+        await expect(page).toHaveURL(/\/cart/);
+        await expect(cartPage.pageHeading).toBeVisible();
+        await cartPage.waitForCartItems();
+
+        const itemCount = await cartPage.getCartItemCount();
+        expect(itemCount).toBe(1);
+        await expect(cartPage.getCartItem(productBName)).toBeVisible();
+        const quantity = await cartPage.getQuantityValue(productBName);
+        expect(quantity.trim()).toBe('1');
+
+        await expect(cartPage.shippingAmount).toContainText(/Free/i);
+        const subtotal = (await cartPage.subtotalAmount.textContent() ?? '').trim();
+        const total = (await cartPage.getTotalAmountText()).trim();
+        expect(subtotal).toBe(productBPrice);
+        expect(total).toBe(productBPrice);
+      });
+
+      await test.step('Click Proceed to Checkout.', async () => {
+        await cartPage.clickProceedToCheckout();
+        await expect(page).toHaveURL(/\/checkout/);
+        await expect(checkoutPage.pageHeading).toBeVisible();
+        expect(await checkoutPage.isCheckoutFormVisible()).toBe(true);
+        await expect(loginPage.heading).not.toBeVisible();
+      });
+
+      await test.step('Enter first name Jordan, last name Lee, and address 500 Market Street, Seattle, WA 98101. Enter card 4242 4242 4242 4242, expiry 12/30, CVV 123, and name on card Jordan Lee. Click Place Order.', async () => {
+        await checkoutPage.fillShippingInfo('Jordan', 'Lee', '500 Market Street, Seattle, WA 98101');
+        await checkoutPage.fillPaymentInfo(VALID_PAYMENT.cardNumber, '12/30', VALID_PAYMENT.cvv, 'Jordan Lee');
+        await checkoutPage.clickPlaceOrder();
+
+        await expect(page).toHaveURL(/\/orders\/\d+/);
+        await expect(orderDetailPage.orderConfirmedHeading).toBeVisible();
+
+        orderId = await orderDetailPage.getOrderId();
+        expect(orderId).toBeTruthy();
+
+        await expect(orderDetailPage.orderStatusBadge).toHaveText(/Pending/i);
+        const shippingText = await orderDetailPage.getShippingAddressText();
+        expect(shippingText).toContain('Jordan Lee');
+        expect(shippingText).toContain('500 Market Street, Seattle, WA 98101');
+
+        await expect(page.getByRole('main').getByText(productBName)).toBeVisible();
+        const orderTotal = await orderDetailPage.getOrderTotalText();
+        expect(orderTotal).toContain(productBPrice);
+
+        const lastFour = VALID_PAYMENT.cardNumber.slice(-4);
+        const paymentText = await orderDetailPage.getPaymentInfoText();
+        expect(paymentText).toContain(lastFour);
+
+        const pageContent = (await page.getByRole('main').textContent()) ?? '';
+        expect(pageContent).not.toContain(VALID_PAYMENT.cardNumber);
+      });
+
+      await test.step('Click the username in the navbar.', async () => {
+        await navBar.clickUsername();
+        await expect(page).toHaveURL(/\/orders/);
+        await expect(ordersPage.pageHeading).toBeVisible();
+        await expect(page.getByText(new RegExp(`Welcome back,?\\s*${STANDARD_USER.username}`, 'i'))).toBeVisible();
+
+        const orderRow = ordersPage.getOrderById(orderId);
+        await expect(orderRow).toBeVisible();
+        await expect(orderRow).toContainText(/Pending/i);
+        await expect(orderRow).toContainText(productBPrice);
+      });
+
+      await test.step("Open that order, then return to Product B's product page.", async () => {
+        await ordersPage.clickOrder(orderId);
+        await expect(page).toHaveURL(new RegExp(`/orders/${orderId}`));
+        await expect(orderDetailPage.orderIdText).toBeVisible();
+
+        const detailOrderId = await orderDetailPage.getOrderId();
+        expect(detailOrderId).toBe(orderId);
+        await expect(orderDetailPage.orderStatusBadge).toHaveText(/Pending/i);
+        await expect(page.getByRole('main').getByText(productBName)).toBeVisible();
+        const detailTotal = await orderDetailPage.getOrderTotalText();
+        expect(detailTotal).toContain(productBPrice);
+
+        await productDetailPage.goto(productBSlug);
+        await expect(page).toHaveURL(new RegExp(`/products/${productBSlug}`));
+        await expect(productDetailPage.productName).toBeVisible();
+        await expect(productDetailPage.stockAvailability).toBeVisible();
+
+        const finalStockText = (await productDetailPage.stockAvailability.textContent()) ?? '';
+        const finalStockMatch = finalStockText.match(/\d+/);
+        const finalStockCount = finalStockMatch ? parseInt(finalStockMatch[0], 10) : 0;
+        expect(finalStockCount).toBe(initialStockCount - 1);
       });
     });
   });
