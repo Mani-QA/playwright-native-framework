@@ -1,0 +1,119 @@
+name: AI Harness
+
+# Starts only when someone runs it by hand. Markdown edits do not start this workflow.
+on:
+  workflow_dispatch:
+    inputs:
+      case:
+        description: Qase case id
+        required: false
+        type: string
+      suite:
+        description: Qase suite id
+        required: false
+        type: string
+      plan:
+        description: Qase plan id
+        required: false
+        type: string
+      limit:
+        description: Maximum suite or plan cases to automate
+        required: false
+        default: "1"
+        type: string
+
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: ai-harness
+  cancel-in-progress: false
+
+jobs:
+  harness:
+    name: Automate Qase case
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+        with:
+          persist-credentials: true
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Playwright Chromium
+        run: npx playwright install chromium --with-deps
+
+      - name: Install Antigravity CLI
+        run: |
+          curl -fsSL https://antigravity.google/cli/install.sh | bash
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+
+      - name: Restore agy credentials
+        env:
+          AGY_CREDENTIALS: ${{ secrets.AGY_CREDENTIALS }}
+          AGY_CREDENTIALS_FILE: ${{ vars.AGY_CREDENTIALS_FILE }}
+        run: |
+          if [ -z "$AGY_CREDENTIALS" ]; then
+            echo "AGY_CREDENTIALS is empty. Headless agy exits until a local login is restored."
+            exit 0
+          fi
+          file_name="${AGY_CREDENTIALS_FILE:-antigravity-oauth-token}"
+          case "$file_name" in
+            *[/\\]*|.*) echo "AGY_CREDENTIALS_FILE must be a single file name."; exit 1 ;;
+          esac
+          mkdir -p "$HOME/.gemini/antigravity-cli"
+          printf '%s' "$AGY_CREDENTIALS" > "$HOME/.gemini/antigravity-cli/$file_name"
+          chmod 600 "$HOME/.gemini/antigravity-cli/$file_name"
+          echo "Restored agy credentials."
+
+      - name: Configure git identity
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+      - name: Run the AI harness
+        env:
+          QASE_API_TOKEN: ${{ secrets.QASE_API_TOKEN }}
+          GH_TOKEN: ${{ github.token }}
+          GEMINI_FORCE_FILE_STORAGE: "true"
+          HARNESS_CASE: ${{ inputs.case }}
+          HARNESS_SUITE: ${{ inputs.suite }}
+          HARNESS_PLAN: ${{ inputs.plan }}
+          HARNESS_LIMIT: ${{ inputs.limit }}
+          CI: true
+        run: |
+          set -euo pipefail
+          is_number() { [[ "$1" =~ ^[0-9]+$ ]]; }
+          args=()
+          if [ -n "${HARNESS_CASE}" ]; then
+            is_number "$HARNESS_CASE" || { echo "Case id must be a number."; exit 1; }
+            args+=(--case "$HARNESS_CASE")
+          fi
+          if [ -n "${HARNESS_SUITE}" ]; then
+            is_number "$HARNESS_SUITE" || { echo "Suite id must be a number."; exit 1; }
+            args+=(--suite "$HARNESS_SUITE")
+          fi
+          if [ -n "${HARNESS_PLAN}" ]; then
+            is_number "$HARNESS_PLAN" || { echo "Plan id must be a number."; exit 1; }
+            args+=(--plan "$HARNESS_PLAN")
+          fi
+          if [ "${#args[@]}" -eq 0 ]; then
+            echo "Enter a case, suite, or plan id."
+            exit 1
+          fi
+          limit="${HARNESS_LIMIT:-1}"
+          is_number "$limit" || { echo "Limit must be a number."; exit 1; }
+          if [ -z "${HARNESS_CASE}" ]; then
+            args+=(--limit "$limit")
+          fi
+          node scripts/automate-cli.mjs "${args[@]}"

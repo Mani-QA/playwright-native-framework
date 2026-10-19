@@ -22,6 +22,7 @@ The suite covers signup and login, shopping, admin, the REST API, and the store'
 - [CI/CD Integration](#cicd-integration)
 - [Playwright Test Agents](#playwright-test-agents)
 - [Best Practices](#best-practices)
+- [AI Harness](#ai-harness)
 - [Troubleshooting](#troubleshooting)
 
 ---
@@ -722,6 +723,14 @@ Global setup creates the shared customer and writes `playwright/.auth/customer.j
 `auth.setup.ts` also signs in as that customer and as `admin_user`, then saves storage state under `playwright/.auth/`. The Chromium project does not load that storage state, so a guest test starts signed out. The admin password is `$Admin` plus the runner's local date as `DDMMYYYY`. GitHub-hosted Ubuntu uses UTC.
 
 ---
+
+## AI Harness
+
+The AI Harness reads a Qase case, fills missing steps from the product requirements, reuses the current page objects, adds the spec, runs it, and opens a pull request. Setup, secrets, and the GitHub Actions workflow are in [docs/ai-harness-getting-started.md](docs/ai-harness-getting-started.md).
+
+```bash
+npm run harness -- --case 91 --dry-run
+```
 
 ## Playwright Test Agents
 

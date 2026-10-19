@@ -24,6 +24,8 @@
     "report": "npx playwright show-report",
     "codegen": "npx playwright codegen https://qademo.com",
     "lint": "eslint .",
+    "index:pom": "node scripts/generate-pom-index.mjs",
+    "harness": "node scripts/automate-cli.mjs",
     "agent:init": "npx playwright init-agents --loop=vscode",
     "agent:seed": "npx playwright test --grep \"@agent\" --project=chromium",
     "agent:mcp": "npx playwright run-test-mcp-server"

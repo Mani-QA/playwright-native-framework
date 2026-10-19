@@ -1,0 +1,16 @@
+{
+  "enableTerminalSandbox": true,
+  "terminalSandboxNetwork": true,
+  "permissions": {
+    "allow": [
+      "mcp(qase/*)",
+      "mcp(playwright/*)",
+      "mcp(github/*)",
+      "command(npx)",
+      "command(npm)",
+      "command(node)",
+      "command(git)",
+      "command(gh)"
+    ]
+  }
+}
