@@ -27,8 +27,8 @@ export class OrderDetailPage {
     // Order status - displayed as text like "Processing", "Pending", etc.
     this.orderStatusBadge = page.getByText(/^(Processing|Pending|Completed|Shipped|Delivered)$/);
 
-    // Shipping information - look for heading with Shipping
-    this.shippingAddress = page.getByRole('heading', { name: /Shipping Information/i }).locator('..');
+    // Shipping information - section containing shipping heading and address details
+    this.shippingAddress = page.getByRole('heading', { name: /Shipping Information/i }).locator('xpath=../../..');
 
     // Payment information - text showing card ending info
     this.paymentInfo = page.getByText(/card ending/i);
@@ -36,9 +36,8 @@ export class OrderDetailPage {
     // Ordered items - each order item has product name and price
     this.orderedItems = page.getByRole('heading', { name: /Order Items/i }).locator('..').locator('div > div');
 
-    // Order total - find the container that has both "Total" and a price
-    // Using a more specific locator to get the total row
-    this.orderTotal = page.getByText('Total$').first();
+    // Order total - find the container with Total and amount
+    this.orderTotal = page.locator('main').getByText(/^Total/i).locator('..');
 
     // Navigation - "Continue Shopping" link on order detail page
     this.backToOrdersLink = page.getByRole('link', { name: /Continue Shopping|Back to Orders|View All Orders/i });

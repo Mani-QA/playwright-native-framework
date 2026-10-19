@@ -151,13 +151,14 @@ Methods:
 
 File: `src/pages/ProductDetailPage.ts`
 
-Locators: `productImage`, `productName`, `productDescription`, `productPrice`, `stockAvailability`, `addToCartButton`, `inCartButton`, `backToProductsLink`, `notFoundMessage`
+Locators: `productImage`, `productName`, `productDescription`, `productPrice`, `stockAvailability`, `addToCartButton`, `inCartButton`, `viewCartButton`, `backToProductsLink`, `notFoundMessage`
 
 Methods:
 
 - `goto(productSlug: string)`
 - `addToCart()`
 - `clickInCartButton()`
+- `clickViewCart()`
 - `clickBackToProducts()`
 - `getProductNameText()`
 - `getProductDescriptionText()`

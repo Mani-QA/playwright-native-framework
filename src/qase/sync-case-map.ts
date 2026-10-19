@@ -39,7 +39,7 @@ export async function syncQaseCaseMap(): Promise<void> {
     let offset = 0;
     for (;;) {
       const response = await fetch(
-        `${API}/case/${PROJECT}?suite_id=${suite.id}&limit=100&offset=${offset}`,
+        `${API}/case/${PROJECT}?limit=100&offset=${offset}`,
         { headers },
       );
       if (!response.ok) {
@@ -50,7 +50,7 @@ export async function syncQaseCaseMap(): Promise<void> {
       const payload = (await response.json()) as { result?: { entities?: QaseCase[] } };
       const entities = payload.result?.entities ?? [];
       for (const entity of entities) {
-        if (entity.suite_id === suite.id && entity.title && typeof entity.id === 'number') {
+        if (entity.title && typeof entity.id === 'number') {
           map[entity.title] = entity.id;
         }
       }
@@ -60,7 +60,7 @@ export async function syncQaseCaseMap(): Promise<void> {
 
     fs.mkdirSync(path.dirname(QASE_CASE_MAP_PATH), { recursive: true });
     fs.writeFileSync(QASE_CASE_MAP_PATH, JSON.stringify(map));
-    console.log(`Linked ${Object.keys(map).length} Qase cases from ${SUITE_TITLE}.`);
+    console.log(`Linked ${Object.keys(map).length} Qase cases for ${PROJECT}.`);
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Unknown error';
     console.warn(`Qase case map was not updated. This run will not link results. ${message}`);

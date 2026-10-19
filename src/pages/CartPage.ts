@@ -30,14 +30,14 @@ export class CartPage {
     // Cart actions
     this.clearCartButton = page.getByRole('button', { name: /Clear Cart/i });
 
-    // Cart items - each item is a link with product info, in main content area
-    this.cartItems = page.getByRole('main').locator('a[href^="/products/"]');
+    // Cart items - each item is a listitem in the cart items list
+    this.cartItems = page.getByRole('main').getByRole('listitem');
 
     // Order summary - look for heading instead of region
     this.orderSummary = page.getByRole('heading', { name: /Order Summary/i }).locator('..');
-    this.subtotalAmount = page.getByText('Subtotal').locator('..').locator('div').last();
-    this.shippingAmount = page.getByText('Shipping').locator('..').locator('div').last();
-    this.totalAmount = page.getByText('Total').locator('..').locator('div').last();
+    this.subtotalAmount = page.locator('[data-testid="order-subtotal"]').or(page.getByText('Subtotal').locator('..').locator('span').last());
+    this.shippingAmount = page.locator('[data-testid="order-shipping"]').or(page.getByText('Shipping').locator('..').locator('span').last());
+    this.totalAmount = page.locator('[data-testid="order-total"]').or(page.getByText('Total').locator('..').locator('span').last());
     this.proceedToCheckoutButton = page.getByRole('button', { name: /Proceed to Checkout/i });
   }
 
@@ -180,8 +180,8 @@ export class CartPage {
     await this.proceedToCheckoutButton.waitFor({ state: 'visible', timeout: 10000 });
     // Use force click to handle React re-render stability issues
     await this.proceedToCheckoutButton.click({ force: true });
-    // Wait for navigation to checkout page
-    await this.page.waitForURL(/\/checkout/, { timeout: 10000 });
+    // Wait for navigation to checkout or login page
+    await this.page.waitForURL(/\/(checkout|login)/, { timeout: 10000 });
   }
 
   /**
