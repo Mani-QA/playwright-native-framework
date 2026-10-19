@@ -51,7 +51,7 @@ function qaseCaseId(testInfo: TestInfo): number | undefined {
 
   const requirement = [...testInfo.titlePath]
     .reverse()
-    .map((part) => part.match(/FR-[A-Z]+-\d+/)?.[0])
+    .map((part) => part.match(/(FR|TC)-[A-Z0-9]+-\d+/)?.[0])
     .find((value): value is string => Boolean(value));
 
   if (!requirement) return undefined;
