@@ -61,8 +61,8 @@ export class CheckoutPage {
     this.cardholderNameInput = page.getByLabel(/Name on Card|Cardholder/i).or(page.getByPlaceholder(/name on card/i));
 
     // Order Summary section
-    this.orderSummarySection = page.getByRole('region', { name: /Order Summary/i });
-    this.orderItems = page.getByRole('listitem');
+    this.orderSummarySection = page.getByRole('heading', { name: /Order Summary/i }).locator('..');
+    this.orderItems = page.getByRole('main').getByText(/Qty:\s*\d+/i).locator('..');
     this.subtotalAmount = page.getByText(/Subtotal/i).locator('..').getByText(/\$\d+\.\d{2}/);
     this.shippingAmount = page.getByText(/Shipping/i).locator('..').getByText(/Free|\$\d+\.\d{2}/i);
     this.totalAmount = page.getByText(/^Total$/i).locator('..').getByText(/\$\d+\.\d{2}/);

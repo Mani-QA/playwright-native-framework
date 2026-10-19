@@ -13,6 +13,7 @@ export class ProductDetailPage {
   readonly stockAvailability: Locator;
   readonly addToCartButton: Locator;
   readonly inCartButton: Locator;
+  readonly viewCartButton: Locator;
   readonly backToProductsLink: Locator;
   readonly notFoundMessage: Locator;
 
@@ -27,8 +28,9 @@ export class ProductDetailPage {
     this.stockAvailability = page.getByText(/\d+ in stock/i);
 
     // Cart actions - button name may be "Add to Cart" or "Add"
-    this.addToCartButton = page.getByRole('button', { name: /Add to Cart|^Add$/i });
-    this.inCartButton = page.getByRole('button', { name: /In Cart/i });
+    this.addToCartButton = page.getByRole('button', { name: /Add .+ to cart|Add to Cart|^Add$/i });
+    this.inCartButton = page.getByRole('button', { name: /Remove .+ from cart|In Cart/i });
+    this.viewCartButton = page.locator('a[href="/cart"]').filter({ hasText: /View Cart/i });
 
     // Navigation - "Back to Catalog" instead of "Back to Products"
     this.backToProductsLink = page.getByRole('link', { name: /Back to Catalog|Back to Products/i });
@@ -81,6 +83,13 @@ export class ProductDetailPage {
    */
   async clickInCartButton(): Promise<void> {
     await this.inCartButton.click();
+  }
+
+  /**
+   * Click View Cart button to navigate to cart
+   */
+  async clickViewCart(): Promise<void> {
+    await this.viewCartButton.click();
   }
 
   /**

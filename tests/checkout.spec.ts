@@ -1,6 +1,7 @@
 import { test, expect } from '../src/fixtures/pomFixtures';
 import {
   loadSignedUpUser,
+  createSignupAccount,
   VALID_CHECKOUT_DATA,
   INVALID_CARD_NUMBER,
 } from '../src/test-data';
@@ -303,6 +304,179 @@ test.describe('Checkout Module', () => {
 
       await test.step('Verify order confirmation is displayed', async () => {
         await expect(orderDetailPage.orderConfirmedHeading).toBeVisible();
+      });
+    });
+  });
+
+  test.describe('@p1 TC-E2E-001: Checkout with a single product as a new user', () => {
+    test('Checkout with a single product as a new user', async ({
+      homePage,
+      catalogPage,
+      productDetailPage,
+      cartPage,
+      loginPage,
+      signupPage,
+      checkoutPage,
+      orderDetailPage,
+      ordersPage,
+      navBar,
+      page,
+    }) => {
+      let productAName = '';
+      let productAPrice = '';
+      let orderId = '';
+      const newUser = createSignupAccount();
+      newUser.phone = '5550101001';
+
+      await test.step('Open the storefront home page.', async () => {
+        await homePage.goto();
+        await expect(homePage.welcomeMessage).toBeVisible();
+        await expect(homePage.browseProductsButton).toBeVisible();
+        await expect(navBar.signInButton).toBeVisible();
+        const initialCount = await navBar.getCartItemCount();
+        expect(initialCount).toBe(0);
+      });
+
+      await test.step('Click Browse Products.', async () => {
+        await homePage.clickBrowseProducts();
+        await expect(page).toHaveURL(/\/catalog/);
+        await expect(catalogPage.pageHeading).toBeVisible();
+        await expect(catalogPage.productCards.first()).toBeVisible();
+        const count = await catalogPage.getProductCount();
+        expect(count).toBeGreaterThan(0);
+      });
+
+      await test.step('Open the first product that is not Out of Stock. Record its name and price as Product A.', async () => {
+        const inStockCard = catalogPage.productCards.filter({ hasNotText: 'Out of Stock' }).first();
+        await expect(inStockCard).toBeVisible();
+        await inStockCard.getByRole('heading').click();
+        await expect(page).toHaveURL(/\/products\//);
+
+        await expect(productDetailPage.productName).toBeVisible();
+        productAName = (await productDetailPage.getProductNameText()).trim();
+        productAPrice = (await productDetailPage.getProductPriceText()).trim();
+        expect(productAName).toBeTruthy();
+        expect(productAPrice).toMatch(/^\$\d+\.\d{2}$/);
+
+        await expect(productDetailPage.addToCartButton).toBeVisible();
+        await expect(productDetailPage.addToCartButton).toBeEnabled();
+        await expect(productDetailPage.stockAvailability).toBeVisible();
+        const stockText = await productDetailPage.stockAvailability.textContent() ?? '';
+        const stockMatch = stockText.match(/\d+/);
+        const stockCount = stockMatch ? parseInt(stockMatch[0], 10) : 0;
+        expect(stockCount).toBeGreaterThan(0);
+      });
+
+      await test.step('Click Add to Cart.', async () => {
+        await productDetailPage.addToCart();
+        await expect(productDetailPage.inCartButton).toBeVisible();
+        await expect(productDetailPage.inCartButton).toContainText(/In Cart/i);
+        await navBar.waitForCartItemCount(1);
+        const cartCount = await navBar.getCartItemCount();
+        expect(cartCount).toBe(1);
+      });
+
+      await test.step('Click View Cart.', async () => {
+        await productDetailPage.clickViewCart();
+        await expect(page).toHaveURL(/\/cart/);
+        await expect(cartPage.pageHeading).toBeVisible();
+        await cartPage.waitForCartItems();
+
+        const itemCount = await cartPage.getCartItemCount();
+        expect(itemCount).toBe(1);
+        await expect(cartPage.getCartItem(productAName)).toBeVisible();
+        const quantity = await cartPage.getQuantityValue(productAName);
+        expect(quantity.trim()).toBe('1');
+
+        await expect(cartPage.shippingAmount).toContainText(/Free/i);
+        const subtotal = await cartPage.subtotalAmount.textContent() ?? '';
+        const total = await cartPage.getTotalAmountText();
+        expect(subtotal.trim()).toBe(productAPrice);
+        expect(total.trim()).toBe(productAPrice);
+      });
+
+      await test.step('Click Proceed to Checkout.', async () => {
+        await cartPage.clickProceedToCheckout();
+        await expect(page).toHaveURL(/\/login/);
+        await expect(loginPage.heading).toBeVisible();
+        expect(await checkoutPage.isCheckoutFormVisible()).toBe(false);
+      });
+
+      await test.step('Click Sign Up.', async () => {
+        await loginPage.clickCreateAccount();
+        await expect(page).toHaveURL(/\/signup/);
+        await expect(signupPage.heading).toBeVisible();
+      });
+
+      await test.step('Enter a unique email, phone 5550101001, a unique username, password NewUser1!, and the same password in Confirm Password. Click Create Account.', async () => {
+        await signupPage.fillForm(newUser);
+        await signupPage.heading.click();
+        await signupPage.clickCreateAccount();
+
+        await expect(page).toHaveURL(/\/catalog/);
+        await expect(page.getByRole('navigation').getByRole('link', { name: new RegExp(newUser.username, 'i') })).toBeVisible();
+        const cartCount = await navBar.getCartItemCount();
+        expect(cartCount).toBe(1);
+      });
+
+      await test.step('Open the cart and click Proceed to Checkout.', async () => {
+        await navBar.clickCart();
+        await expect(page).toHaveURL(/\/cart/);
+        await expect(cartPage.pageHeading).toBeVisible();
+        await cartPage.waitForCartItems();
+
+        await cartPage.clickProceedToCheckout();
+        await expect(page).toHaveURL(/\/checkout/);
+        await expect(checkoutPage.pageHeading).toBeVisible();
+        expect(await checkoutPage.isCheckoutFormVisible()).toBe(true);
+
+        await expect(checkoutPage.orderItems).toHaveCount(1);
+        await expect(checkoutPage.orderItems.first()).toContainText(productAName);
+        await expect(checkoutPage.orderItems.first()).toContainText('1');
+        await expect(checkoutPage.shippingAmount).toContainText(/Free/i);
+        const checkoutTotal = await checkoutPage.getTotalAmountText();
+        expect(checkoutTotal.trim()).toBe(productAPrice);
+      });
+
+      await test.step('Enter first name Ada, last name Lovelace, and address 123 Test Street, Austin, TX 78701. Enter card 4242 4242 4242 4242, expiry 12/30, CVV 123, and name on card Ada Lovelace. Click Place Order.', async () => {
+        await checkoutPage.fillShippingInfo('Ada', 'Lovelace', '123 Test Street, Austin, TX 78701');
+        await checkoutPage.fillPaymentInfo('4242 4242 4242 4242', '12/30', '123', 'Ada Lovelace');
+        await checkoutPage.clickPlaceOrder();
+
+        await expect(page).toHaveURL(/\/orders\/\d+/);
+        await expect(orderDetailPage.orderConfirmedHeading).toBeVisible();
+
+        orderId = await orderDetailPage.getOrderId();
+        expect(orderId).toBeTruthy();
+
+        await expect(orderDetailPage.orderStatusBadge).toHaveText(/Pending/i);
+        const shippingText = await orderDetailPage.getShippingAddressText();
+        expect(shippingText).toContain('Ada Lovelace');
+        expect(shippingText).toContain('123 Test Street, Austin, TX 78701');
+
+        await expect(page.getByRole('main').getByText(productAName)).toBeVisible();
+        const orderTotal = await orderDetailPage.getOrderTotalText();
+        expect(orderTotal).toContain(productAPrice);
+
+        const pageContent = await page.getByRole('main').textContent() ?? '';
+        expect(pageContent).not.toContain('4242 4242 4242 4242');
+        expect(pageContent).not.toContain('CVV');
+      });
+
+      await test.step('Open My Orders from the username in the navbar.', async () => {
+        await navBar.clickUsername();
+        await expect(page).toHaveURL(/\/orders/);
+        await expect(ordersPage.pageHeading).toBeVisible();
+
+        const cartCount = await navBar.getCartItemCount();
+        expect(cartCount).toBe(0);
+
+        const orderRow = ordersPage.getOrderById(orderId);
+        await expect(orderRow).toBeVisible();
+        await expect(orderRow).toContainText(/Pending/i);
+        await expect(orderRow).toContainText(productAPrice);
+        const orderCount = await ordersPage.getOrderCount();
+        expect(orderCount).toBe(1);
       });
     });
   });
