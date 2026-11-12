@@ -1,29 +1,6 @@
 import { test, expect } from '../src/fixtures/pomFixtures';
 import { loadSignedUpUser, VALID_CHECKOUT_DATA } from '../src/test-data';
 
-/**
- * Helper function to add a product to cart and wait for cart state to sync
- */
-async function addProductToCart(
-  page: import('@playwright/test').Page,
-  expect: typeof import('@playwright/test').expect
-): Promise<void> {
-  // Wait for catalog to be fully loaded - wait for product cards to appear
-  await page.locator('[data-testid^="product-card-"]').first().waitFor({ state: 'visible', timeout: 10000 });
-  
-  // Find an enabled "Add" button (product not already in cart)
-  const addButtons = page.getByRole('button', { name: /Add .+ to cart/i });
-  const firstEnabledButton = addButtons.first();
-  
-  // Wait for the button to be visible and enabled
-  await firstEnabledButton.waitFor({ state: 'visible', timeout: 10000 });
-  await expect(firstEnabledButton).toBeEnabled({ timeout: 15000 });
-  await firstEnabledButton.click();
-  
-  // Wait for the cart badge in navbar to show a number (indicating cart has items)
-  await page.locator('nav a[href="/cart"]').filter({ hasText: /\d+/ }).waitFor({ state: 'visible', timeout: 10000 });
-}
-
 test.describe('Order Management Module', () => {
   test.describe('@p1 FR-ORD-001: Orders Page Access', () => {
     test('Only authenticated users can view orders', async ({ ordersPage, page }) => {
@@ -44,7 +21,6 @@ test.describe('Order Management Module', () => {
       cartPage,
       checkoutPage,
       ordersPage,
-      page,
     }) => {
       await test.step('Navigate to login page and login', async () => {
         await loginPage.goto();
@@ -54,7 +30,7 @@ test.describe('Order Management Module', () => {
 
       await test.step('Add a product to cart', async () => {
         await catalogPage.goto();
-        await addProductToCart(page, expect);
+        await catalogPage.addFirstAvailableProductToCart();
       });
 
       await test.step('Complete checkout', async () => {
@@ -132,7 +108,7 @@ test.describe('Order Management Module', () => {
 
       await test.step('Add a product and complete checkout', async () => {
         await catalogPage.goto();
-        await addProductToCart(page, expect);
+        await catalogPage.addFirstAvailableProductToCart();
         await cartPage.gotoViaNavbar();
         await cartPage.waitForCartItems();
         await cartPage.clickProceedToCheckout();
@@ -185,7 +161,6 @@ test.describe('Order Management Module', () => {
       cartPage,
       checkoutPage,
       orderDetailPage,
-      page,
     }) => {
       await test.step('Navigate to login page and login', async () => {
         await loginPage.goto();
@@ -195,7 +170,7 @@ test.describe('Order Management Module', () => {
 
       await test.step('Add a product and complete checkout', async () => {
         await catalogPage.goto();
-        await addProductToCart(page, expect);
+        await catalogPage.addFirstAvailableProductToCart();
         await cartPage.gotoViaNavbar();
         await cartPage.waitForCartItems();
         await cartPage.clickProceedToCheckout();
