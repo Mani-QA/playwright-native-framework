@@ -39,7 +39,6 @@ test.describe('Navigation & Layout Module', () => {
       loginPage,
       catalogPage,
       navBar,
-      page,
     }) => {
       await test.step('Navigate to login page and login', async () => {
         await loginPage.goto();
@@ -57,12 +56,7 @@ test.describe('Navigation & Layout Module', () => {
       });
 
       await test.step('Add a product to cart', async () => {
-        // Wait for catalog to be fully loaded
-        await page.locator('[data-testid^="product-card-"]').first().waitFor({ state: 'visible', timeout: 10000 });
-        const addButton = page.getByRole('button', { name: /Add .+ to cart/i }).first();
-        await addButton.waitFor({ state: 'visible', timeout: 10000 });
-        await expect(addButton).toBeEnabled({ timeout: 15000 });
-        await addButton.click();
+        await catalogPage.addFirstAvailableProductToCart();
       });
 
       await test.step('Verify cart badge updates', async () => {

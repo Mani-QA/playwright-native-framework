@@ -6,29 +6,6 @@ import {
   INVALID_CARD_NUMBER,
 } from '../src/test-data';
 
-/**
- * Helper function to add a product to cart and wait for cart state to sync
- */
-async function addProductToCart(
-  page: import('@playwright/test').Page,
-  expect: typeof import('@playwright/test').expect
-): Promise<void> {
-  // Wait for catalog to be fully loaded - wait for product cards to appear
-  await page.locator('[data-testid^="product-card-"]').first().waitFor({ state: 'visible', timeout: 10000 });
-  
-  // Find an enabled "Add" button (product not already in cart)
-  const addButtons = page.getByRole('button', { name: /Add .+ to cart/i });
-  const firstEnabledButton = addButtons.first();
-  
-  // Wait for the button to be visible and enabled
-  await firstEnabledButton.waitFor({ state: 'visible', timeout: 10000 });
-  await expect(firstEnabledButton).toBeEnabled({ timeout: 15000 });
-  await firstEnabledButton.click();
-  
-  // Wait for the cart badge in navbar to show a number (indicating cart has items)
-  await page.locator('nav a[href="/cart"]').filter({ hasText: /\d+/ }).waitFor({ state: 'visible', timeout: 10000 });
-}
-
 test.describe('Checkout Module', () => {
   test.describe('@p3 FR-CHK-001: Checkout Page Access', () => {
     test('Only authenticated users can access checkout', async ({ checkoutPage, page }) => {
@@ -85,7 +62,6 @@ test.describe('Checkout Module', () => {
       catalogPage,
       cartPage,
       checkoutPage,
-      page,
     }) => {
       await test.step('Navigate to login page and login', async () => {
         await loginPage.goto();
@@ -95,7 +71,7 @@ test.describe('Checkout Module', () => {
 
       await test.step('Add a product to cart', async () => {
         await catalogPage.goto();
-        await addProductToCart(page, expect);
+        await catalogPage.addFirstAvailableProductToCart();
       });
 
       await test.step('Navigate to checkout via cart', async () => {
@@ -139,7 +115,7 @@ test.describe('Checkout Module', () => {
 
       await test.step('Add a product to cart', async () => {
         await catalogPage.goto();
-        await addProductToCart(page, expect);
+        await catalogPage.addFirstAvailableProductToCart();
       });
 
       await test.step('Navigate to checkout via cart', async () => {
@@ -149,15 +125,13 @@ test.describe('Checkout Module', () => {
       });
 
       await test.step('Submit form with empty fields', async () => {
-        await checkoutPage.clickPlaceOrder();
-        // Wait for validation messages to appear
-        await page.waitForSelector('text=/is required/', { timeout: 5000 });
+        await checkoutPage.submitPlaceOrder();
       });
 
       await test.step('Verify validation errors are displayed', async () => {
-        // Form should show validation errors - text containing "is required"
-        const alertCount = await checkoutPage.validationErrors.count();
-        expect(alertCount).toBeGreaterThan(0);
+        await expect(page.getByText('First name is required')).toBeVisible();
+        await expect(page.getByText('Address is required')).toBeVisible();
+        await expect(page.getByText('Card number is required')).toBeVisible();
       });
     });
   });
@@ -178,7 +152,7 @@ test.describe('Checkout Module', () => {
 
       await test.step('Add a product to cart', async () => {
         await catalogPage.goto();
-        await addProductToCart(page, expect);
+        await catalogPage.addFirstAvailableProductToCart();
       });
 
       await test.step('Navigate to checkout via cart', async () => {
@@ -205,20 +179,12 @@ test.describe('Checkout Module', () => {
       });
 
       await test.step('Submit the form', async () => {
-        await checkoutPage.clickPlaceOrder();
-        // Wait for either validation error or page navigation
-        await page.waitForLoadState('domcontentloaded');
+        await checkoutPage.submitPlaceOrder();
       });
 
-      await test.step('Verify card number validation error or order rejection', async () => {
-        // The app might show validation error OR reject the order with invalid card
-        // Check for either validation error text or that we're still on checkout (not order confirmed)
-        const validationErrorVisible = await page.locator('text=/invalid|error/i').isVisible().catch(() => false);
-        const stillOnCheckout = page.url().includes('/checkout');
-        const noOrderConfirmed = !(await page.getByRole('heading', { name: /Order Confirmed/i }).isVisible().catch(() => false));
-        
-        // Pass if validation error is shown OR we're still on checkout (order not placed with invalid card)
-        expect(validationErrorVisible || (stillOnCheckout && noOrderConfirmed)).toBeTruthy();
+      await test.step('Verify card number validation error is displayed', async () => {
+        await expect(page.getByRole('alert')).toContainText(/Invalid card number/i);
+        await expect(page).toHaveURL(/checkout/);
       });
     });
   });
@@ -244,7 +210,7 @@ test.describe('Checkout Module', () => {
       await test.step('Add a product to cart', async () => {
         // Wait for catalog page to be fully loaded
         await catalogPage.productCards.first().waitFor({ state: 'visible', timeout: 10000 });
-        await addProductToCart(page, expect);
+        await catalogPage.addFirstAvailableProductToCart();
       });
 
       await test.step('Navigate to checkout via cart', async () => {
@@ -276,7 +242,6 @@ test.describe('Checkout Module', () => {
       cartPage,
       checkoutPage,
       orderDetailPage,
-      page,
     }) => {
       await test.step('Navigate to login page and login', async () => {
         await loginPage.goto();
@@ -286,7 +251,7 @@ test.describe('Checkout Module', () => {
 
       await test.step('Add a product to cart', async () => {
         await catalogPage.goto();
-        await addProductToCart(page, expect);
+        await catalogPage.addFirstAvailableProductToCart();
       });
 
       await test.step('Navigate to checkout via cart', async () => {

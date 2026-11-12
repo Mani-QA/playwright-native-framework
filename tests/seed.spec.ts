@@ -71,16 +71,7 @@ test.describe('@agent Seed Tests for Agent Exploration', () => {
 
     // Add product to cart (demonstrates cart interaction)
     await test.step('Add product to cart', async () => {
-      const addButton = page.getByRole('button', { name: /Add .+ to cart/i }).first();
-      await addButton.waitFor({ state: 'visible' });
-      await expect(addButton).toBeEnabled({ timeout: 10000 });
-      await addButton.click();
-
-      // Wait for cart to update
-      await page.locator('nav a[href="/cart"]').filter({ hasText: /\d+/ }).waitFor({
-        state: 'visible',
-        timeout: 10000,
-      });
+      await catalogPage.addFirstAvailableProductToCart();
     });
 
     // Navigate to cart

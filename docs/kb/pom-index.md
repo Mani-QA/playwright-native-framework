@@ -59,6 +59,7 @@ Methods:
 - `clickProduct(productName: string)`
 - `addToCart(productName: string)`
 - `addFirstAvailableProductToCart()`
+- `openInStockProduct()`
 - `clickInCartButton(productName: string)`
 - `removeFromCart(productName: string)`
 - `getProductCount()`
@@ -77,6 +78,7 @@ Methods:
 - `fillShippingInfo(firstName: string, lastName: string, address: string)`
 - `fillPaymentInfo(cardNumber: string, expiryDate: string, cvv: string, cardholderName: string)`
 - `fillCheckoutForm(shippingInfo: { firstName: string; lastName: string; address: string }, paymentInfo: { cardNumber: string; expiryDate: string; cvv: string; cardholderName: string })`
+- `submitPlaceOrder()`
 - `clickPlaceOrder()`
 - `completeCheckout(shippingInfo: { firstName: string; lastName: string; address: string }, paymentInfo: { cardNumber: string; expiryDate: string; cvv: string; cardholderName: string })`
 - `getValidationErrors()`

@@ -74,7 +74,6 @@ test.describe('Product Catalog Module', () => {
       loginPage,
       catalogPage,
       navBar,
-      page,
     }) => {
       await test.step('Navigate to login page and login', async () => {
         await loginPage.goto();
@@ -90,13 +89,8 @@ test.describe('Product Catalog Module', () => {
         await expect(catalogPage.productCards.first()).toBeVisible();
       });
 
-      await test.step('Add first available product to cart', async () => {
-        // Wait for catalog to be fully loaded
-        await page.locator('[data-testid^="product-card-"]').first().waitFor({ state: 'visible', timeout: 10000 });
-        const addButton = page.getByRole('button', { name: /Add .+ to cart/i }).first();
-        await addButton.waitFor({ state: 'visible', timeout: 10000 });
-        await expect(addButton).toBeEnabled({ timeout: 15000 });
-        await addButton.click();
+      await test.step('Add an in-stock product to cart', async () => {
+        await catalogPage.addFirstAvailableProductToCart();
       });
 
       await test.step('Verify cart badge updates to show item count', async () => {
@@ -122,18 +116,14 @@ test.describe('Product Catalog Module', () => {
         await catalogPage.goto();
       });
 
+      let productName = '';
+
       await test.step('Add a product to cart', async () => {
-        // Wait for catalog to be fully loaded
-        await page.locator('[data-testid^="product-card-"]').first().waitFor({ state: 'visible', timeout: 10000 });
-        const addButton = page.getByRole('button', { name: /Add .+ to cart/i }).first();
-        await addButton.waitFor({ state: 'visible', timeout: 10000 });
-        await expect(addButton).toBeEnabled({ timeout: 15000 });
-        await addButton.click();
+        productName = await catalogPage.addFirstAvailableProductToCart();
       });
 
       await test.step('Click In Cart button', async () => {
-        const inCartButton = page.getByRole('button', { name: /In Cart/i }).first();
-        await inCartButton.click();
+        await catalogPage.clickInCartButton(productName);
       });
 
       await test.step('Verify navigated to cart page', async () => {
@@ -146,7 +136,6 @@ test.describe('Product Catalog Module', () => {
     test('Product detail page shows complete product information', async ({
       catalogPage,
       productDetailPage,
-      page,
     }) => {
       await test.step('Navigate to catalog page', async () => {
         await catalogPage.goto();
@@ -179,9 +168,9 @@ test.describe('Product Catalog Module', () => {
         await loginPage.login(customer.username, customer.password);
       });
 
-      await test.step('Navigate to catalog and click first product', async () => {
+      await test.step('Navigate to catalog and open an in-stock product', async () => {
         await catalogPage.goto();
-        await catalogPage.productCards.first().click();
+        await catalogPage.openInStockProduct();
       });
 
       await test.step('Add product to cart', async () => {

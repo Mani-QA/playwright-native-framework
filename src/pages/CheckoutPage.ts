@@ -152,6 +152,13 @@ export class CheckoutPage {
   }
 
   /**
+   * Submit checkout and stay on the form when validation fails.
+   */
+  async submitPlaceOrder(): Promise<void> {
+    await this.placeOrderButton.click();
+  }
+
+  /**
    * Click Place Order button
    */
   async clickPlaceOrder(): Promise<void> {

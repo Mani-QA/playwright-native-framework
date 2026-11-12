@@ -1,30 +1,6 @@
 import { test, expect } from '../src/fixtures/pomFixtures';
 import { loadSignedUpUser } from '../src/test-data';
 
-/**
- * Helper function to add a product to cart and wait for cart state to sync
- * This ensures the cart state is fully synced before proceeding
- */
-async function addProductToCart(
-  page: import('@playwright/test').Page
-): Promise<void> {
-  // Wait for catalog to be fully loaded - wait for product cards to appear
-  await page.locator('[data-testid^="product-card-"]').first().waitFor({ state: 'visible', timeout: 10000 });
-  
-  // Find an enabled "Add" button (product not already in cart)
-  // The button text contains "Add" and is for adding to cart
-  const addButtons = page.getByRole('button', { name: /Add .+ to cart/i });
-  const firstEnabledButton = addButtons.first();
-  
-  // Wait for the button to be visible and enabled
-  await firstEnabledButton.waitFor({ state: 'visible', timeout: 10000 });
-  await expect(firstEnabledButton).toBeEnabled({ timeout: 15000 });
-  await firstEnabledButton.click();
-  
-  // Wait for the cart badge in navbar to show a number (indicating cart has items)
-  await page.locator('nav a[href="/cart"]').filter({ hasText: /\d+/ }).waitFor({ state: 'visible', timeout: 10000 });
-}
-
 test.describe('Shopping Cart Module', () => {
   test.describe('@p2 FR-CART-001: Empty Cart Display', () => {
     test('Empty cart shows appropriate message', async ({ cartPage }) => {
@@ -47,7 +23,6 @@ test.describe('Shopping Cart Module', () => {
       loginPage,
       catalogPage,
       cartPage,
-      page,
     }) => {
       await test.step('Navigate to login page and login', async () => {
         await loginPage.goto();
@@ -57,7 +32,7 @@ test.describe('Shopping Cart Module', () => {
 
       await test.step('Navigate to catalog and add a product', async () => {
         await catalogPage.goto();
-        await addProductToCart(page);
+        await catalogPage.addFirstAvailableProductToCart();
       });
 
       await test.step('Navigate to cart page via navbar', async () => {
@@ -92,7 +67,7 @@ test.describe('Shopping Cart Module', () => {
 
       await test.step('Navigate to catalog and add a product', async () => {
         await catalogPage.goto();
-        await addProductToCart(page);
+        await catalogPage.addFirstAvailableProductToCart();
       });
 
       await test.step('Navigate to cart page via navbar', async () => {
@@ -142,7 +117,7 @@ test.describe('Shopping Cart Module', () => {
 
       await test.step('Navigate to catalog and add a product', async () => {
         await catalogPage.goto();
-        await addProductToCart(page);
+        await catalogPage.addFirstAvailableProductToCart();
       });
 
       await test.step('Navigate to cart page via navbar', async () => {
@@ -186,7 +161,6 @@ test.describe('Shopping Cart Module', () => {
       loginPage,
       catalogPage,
       cartPage,
-      page,
     }) => {
       await test.step('Navigate to login page and login', async () => {
         await loginPage.goto();
@@ -196,7 +170,7 @@ test.describe('Shopping Cart Module', () => {
 
       await test.step('Navigate to catalog and add a product', async () => {
         await catalogPage.goto();
-        await addProductToCart(page);
+        await catalogPage.addFirstAvailableProductToCart();
       });
 
       await test.step('Navigate to cart page via navbar', async () => {
@@ -233,7 +207,7 @@ test.describe('Shopping Cart Module', () => {
 
       await test.step('Navigate to catalog and add a product', async () => {
         await catalogPage.goto();
-        await addProductToCart(page);
+        await catalogPage.addFirstAvailableProductToCart();
       });
 
       await test.step('Navigate to cart page via navbar', async () => {
@@ -264,7 +238,6 @@ test.describe('Shopping Cart Module', () => {
       loginPage,
       catalogPage,
       cartPage,
-      page,
     }) => {
       await test.step('Navigate to login page and login', async () => {
         await loginPage.goto();
@@ -274,14 +247,8 @@ test.describe('Shopping Cart Module', () => {
 
       await test.step('Navigate to catalog and add multiple products', async () => {
         await catalogPage.goto();
-        // Add first product
-        await addProductToCart(page);
-        // Add second product (if available)
-        const secondAddButton = page.getByRole('button', { name: 'Add' }).first();
-        if (await secondAddButton.isVisible()) {
-          await secondAddButton.click();
-          await page.getByRole('button', { name: /In Cart/i }).nth(1).waitFor({ state: 'visible', timeout: 10000 });
-        }
+        await catalogPage.addFirstAvailableProductToCart();
+        await catalogPage.addFirstAvailableProductToCart();
       });
 
       await test.step('Navigate to cart page via navbar', async () => {
@@ -314,7 +281,7 @@ test.describe('Shopping Cart Module', () => {
 
       await test.step('Navigate to catalog and add a product', async () => {
         await catalogPage.goto();
-        await addProductToCart(page);
+        await catalogPage.addFirstAvailableProductToCart();
       });
 
       await test.step('Navigate to cart page via navbar', async () => {
@@ -340,7 +307,7 @@ test.describe('Shopping Cart Module', () => {
     }) => {
       await test.step('Navigate to catalog and add a product', async () => {
         await catalogPage.goto();
-        await addProductToCart(page);
+        await catalogPage.addFirstAvailableProductToCart();
       });
 
       await test.step('Navigate to cart page via navbar', async () => {

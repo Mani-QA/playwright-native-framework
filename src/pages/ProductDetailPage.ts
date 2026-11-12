@@ -47,35 +47,11 @@ export class ProductDetailPage {
   }
 
   /**
-   * Add the product to cart
+   * Add the current product to cart.
+   * The caller must open an in-stock product. An out-of-stock product keeps this button disabled.
    */
   async addToCart(): Promise<void> {
-    // Wait for the page to fully load and button to be visible
-    await this.page.waitForLoadState('domcontentloaded');
-    
-    // Use a more flexible locator that matches buttons containing "Add" text
-    const addButton = this.page.locator('button').filter({ hasText: /Add to Cart|^Add$/i }).first();
-    
-    // Wait for button to be visible and enabled
-    await addButton.waitFor({ state: 'visible', timeout: 15000 });
-    await addButton.waitFor({ state: 'attached', timeout: 5000 });
-    
-    // Ensure button is enabled before clicking
-    await this.page.waitForFunction(
-      () => {
-        const buttons = document.querySelectorAll('button');
-        for (const btn of buttons) {
-          const text = btn.textContent?.toLowerCase() || '';
-          if (text.includes('add to cart') || text.match(/^add$/)) {
-            return !btn.hasAttribute('disabled') && !btn.classList.contains('disabled');
-          }
-        }
-        return false;
-      },
-      { timeout: 10000 }
-    );
-    
-    await addButton.click();
+    await this.addToCartButton.click();
   }
 
   /**

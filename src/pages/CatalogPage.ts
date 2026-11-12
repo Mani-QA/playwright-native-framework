@@ -1,5 +1,67 @@
 import { type Page, type Locator } from '@playwright/test';
 
+type CatalogProduct = {
+  name?: string;
+  stock?: number;
+  isActive?: boolean;
+};
+
+/**
+ * Active products the store can still sell, highest stock first.
+ * Daily runs share one catalog, so the first card is often sold out.
+ */
+async function inStockProducts(page: Page): Promise<Array<{ name: string; stock: number }>> {
+  const response = await page.request.get('/api/products');
+  if (!response.ok()) {
+    throw new Error(`Could not load products (${response.status()})`);
+  }
+
+  const body = (await response.json()) as { data?: CatalogProduct[] };
+  return (body.data ?? [])
+    .filter((product): product is { name: string; stock: number; isActive?: boolean } => {
+      return typeof product.name === 'string'
+        && product.name.trim().length > 0
+        && typeof product.stock === 'number'
+        && product.stock > 0
+        && product.isActive !== false;
+    })
+    .sort((left, right) => right.stock - left.stock || left.name.localeCompare(right.name));
+}
+
+function enabledAddButton(page: Page, productName: string): Locator {
+  return page.getByRole('button', {
+    name: `Add ${productName} to cart`,
+    exact: true,
+    disabled: false,
+  });
+}
+
+/**
+ * Name of an active product whose Add button is enabled.
+ * Highest remaining stock is preferred so a nearly empty product is not the default target.
+ */
+async function firstPurchasableProductName(page: Page): Promise<string> {
+  await page.getByRole('heading', { name: /Product Catalog/i, level: 1 }).waitFor({
+    state: 'visible',
+    timeout: 10000,
+  });
+  await page.getByRole('main').locator('a[href^="/products/"]').first().waitFor({
+    state: 'visible',
+    timeout: 10000,
+  });
+
+  const products = await inStockProducts(page);
+  for (const product of products) {
+    if ((await enabledAddButton(page, product.name).count()) === 1) {
+      return product.name;
+    }
+  }
+
+  throw new Error(
+    'No enabled Add to cart button matched an in-stock product. Out-of-stock products stay disabled.',
+  );
+}
+
 /**
  * Page Object Model for the Catalog Page (/catalog)
  * Handles product listing and cart interactions from catalog
@@ -78,7 +140,8 @@ export class CatalogPage {
    * Get the In Cart button for a product
    */
   getInCartButton(productName: string): Locator {
-    return this.getProductCard(productName).getByRole('button', { name: /In Cart/i });
+    // Visible label is "In Cart". The accessible name is "Go to cart".
+    return this.getProductCard(productName).getByRole('button', { name: /^Go to cart$/i });
   }
 
   /**
@@ -120,20 +183,37 @@ export class CatalogPage {
   }
 
   /**
-   * Add any product to cart (first available product with Add button)
-   * Returns the product name that was added
+   * Add one product that still has stock.
+   * The first catalog card is often out of stock on the shared store, and its Add button stays disabled.
+   * Returns the product name that was added.
    */
   async addFirstAvailableProductToCart(): Promise<string> {
-    // Find the first product card with an "Add" button
-    const firstAddButton = this.page.getByRole('button', { name: 'Add' }).first();
-    const productCard = firstAddButton.locator('xpath=ancestor::a');
-    const productName = await productCard.getByRole('heading').textContent() ?? '';
-    
-    // Click add and wait for In Cart button
-    await firstAddButton.click();
-    await this.page.getByRole('button', { name: /In Cart/i }).first().waitFor({ state: 'visible', timeout: 10000 });
-    
+    const productName = await firstPurchasableProductName(this.page);
+    const cartLink = this.page.getByRole('navigation').locator('a[href="/cart"]');
+    const beforeText = (await cartLink.textContent()) ?? '';
+    const beforeCount = Number(beforeText.match(/\d+/)?.[0] ?? '0');
+    await enabledAddButton(this.page, productName).click();
+    await this.page.waitForFunction(
+      (expectedCount) => {
+        const link = document.querySelector('nav a[href="/cart"]');
+        const match = link?.textContent?.match(/\d+/);
+        return match !== null && match !== undefined && Number(match[0]) >= expectedCount;
+      },
+      beforeCount + 1,
+      { timeout: 10000 },
+    );
     return productName;
+  }
+
+  /**
+   * Open the detail page for one product that still has stock.
+   */
+  async openInStockProduct(): Promise<void> {
+    const productName = await firstPurchasableProductName(this.page);
+    await this.page.getByRole('main').getByRole('heading', {
+      name: productName,
+      exact: true,
+    }).click();
   }
 
   /**
