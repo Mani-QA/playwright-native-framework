@@ -151,7 +151,14 @@ jobs:
           path: playwright-report/
           retention-days: 30
 
-  # Deploy to GitHub Pages
+  # Deploy to GitHub Pages.
+  # upload-pages-artifact@v5 `name` and deploy-pages@v5 `artifact_name` must match.
+  # deploy-pages lists artifacts once and fails the step when that name is missing
+  # or appears more than once. A name unique to this run attempt keeps a
+  # "Re-run failed jobs" upload from colliding with the artifact left by the
+  # earlier attempt. The first deploy is allowed to fail so a transient
+  # artifact-list miss can be retried; the retry is not, so a real failure
+  # still fails the job.
   deploy-report:
     name: Deploy Report to GitHub Pages
     needs: merge-reports
@@ -159,7 +166,9 @@ jobs:
     runs-on: ubuntu-latest
     environment:
       name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
+      url: ${{ steps.pages.outputs.page_url }}
+    env:
+      PAGES_ARTIFACT_NAME: github-pages-${{ github.run_id }}-${{ github.run_attempt }}
 
     steps:
       - name: Download Playwright Report
@@ -175,7 +184,44 @@ jobs:
         uses: actions/upload-pages-artifact@v5
         with:
           path: playwright-report/
+          name: ${{ env.PAGES_ARTIFACT_NAME }}
 
       - name: Deploy to GitHub Pages
         id: deployment
+        continue-on-error: true
         uses: actions/deploy-pages@v5
+        with:
+          artifact_name: ${{ env.PAGES_ARTIFACT_NAME }}
+
+      - name: Wait before retrying Pages deployment
+        if: ${{ steps.deployment.outcome == 'failure' && !cancelled() }}
+        run: |
+          echo "deploy-pages failed. Waiting 30 seconds before one retry."
+          sleep 30
+
+      - name: Retry deploy to GitHub Pages
+        id: deployment-retry
+        if: ${{ steps.deployment.outcome == 'failure' && !cancelled() }}
+        uses: actions/deploy-pages@v5
+        with:
+          artifact_name: ${{ env.PAGES_ARTIFACT_NAME }}
+
+      - name: Record deployed Pages URL
+        id: pages
+        if: ${{ (steps.deployment.outcome == 'success' || steps.deployment-retry.outcome == 'success') && !cancelled() }}
+        env:
+          FIRST_OUTCOME: ${{ steps.deployment.outcome }}
+          FIRST_URL: ${{ steps.deployment.outputs.page_url }}
+          RETRY_URL: ${{ steps.deployment-retry.outputs.page_url }}
+        run: |
+          if [ "$FIRST_OUTCOME" = "success" ]; then
+            url="$FIRST_URL"
+          else
+            url="$RETRY_URL"
+          fi
+          {
+            echo "page_url<<EOF"
+            echo "$url"
+            echo "EOF"
+          } >> "$GITHUB_OUTPUT"
+          echo "GitHub Pages URL: ${url}"
